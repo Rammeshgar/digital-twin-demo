@@ -1,0 +1,17 @@
+{
+  "name": "sadeq-interactive-digital-twin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive Three.js digital twin with animation blending, voice, lip movement and controlled AI context.",
+  "scripts": {
+    "dev": "npx serve .",
+    "check": "node --check mascot.js"
+  },
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@google/genai": "^2.3.0"
+  }
+}

@@ -1,0 +1,12 @@
+.env
+.env.*
+node_modules/
+.npm-cache/
+.netlify/
+dist/
+*.blend
+*.blend1
+*.log
+assets/sadeq-digital-twin.glb
+assets/sadeq-digital-twin.optimized.glb
+assets/sadeq-digital-twin.prepared.glb
