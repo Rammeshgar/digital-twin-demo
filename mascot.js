@@ -945,7 +945,7 @@ async function finishRecordedQuestion(blob) {
         return;
     }
 
-    if (!blob.size) {
+    if (!blob.size || (state.recordingAnalyser && !state.recordingSpeechDetected)) {
         state.recognitionError = "I didn’t hear anything · tap the mic and try again";
         setStatus(state.recognitionError);
         ui.mic.disabled = false;
