@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { createMovement } from './movement.mjs';
-import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs';
+import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs?v=lip-sync-restored';
 
 const ui = {
     toggle: document.getElementById("ai-mascot-toggle"),
@@ -329,6 +329,8 @@ async function loadMascot() {
                 else if (!neckBone && name.includes("neck")) neckBone = child;
             }
         });
+        const visibleHead = model.getObjectByName('new_head');
+        const visibleHeadLipSync = Boolean(visibleHead?.morphTargetDictionary && VISEME_NAMES.every((name) => name in visibleHead.morphTargetDictionary));
 
         frameMascot();
 
@@ -349,7 +351,7 @@ async function loadMascot() {
         state.loaded = true;
         state.loading = false;
         ui.loader.classList.add("is-hidden");
-        setStatus(lipSyncMeshes.length ? "Ready · voice and lip movement online" : "Ready · 3D mascot online");
+        setStatus(visibleHeadLipSync ? "Ready · voice and lip movement online" : "Ready · 3D mascot online");
         animate();
     } catch (error) {
         state.loading = false;
