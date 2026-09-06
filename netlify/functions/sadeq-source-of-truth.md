@@ -99,12 +99,12 @@ Do not assign years of experience, seniority levels, certifications, or mastery 
 - The same verified persona and Source of Truth support both the portfolio interface and the standalone project presentation.
 - Verified browser technologies: Three.js, WebGL, GLTF/GLB skeletal animation and morph targets, Web Speech API, MediaRecorder, vanilla JavaScript, HTML, and CSS.
 - Verified service technologies: Gemini through serverless Netlify Functions, with browser speech and recorded-audio transcription paths.
-- The web model contains 13 authored animation clips and 8 facial viseme targets. Motion was authored at 30 frames per second.
-- Runtime behavior includes an idle state, greeting, start gesture, multiple explanation gestures, dedicated transition clips, continuous animation blending, and a return to idle after speech ends.
+- The deployed character uses 18 authored movement clips and 8 facial viseme targets. Motion was authored at 30 frames per second.
+- Runtime behavior includes 10 speaking gestures, 3 idle movements, 3 listening movements, 2 thinking movements, continuous transition blending, subtle breathing and irregular blinking.
 - Lip movement combines facial viseme targets with audio energy and transcript timing. The interface delays performance until speech is ready to reduce clipped first words.
 - Failure handling keeps text chat available when WebGL, microphone access, speech recognition, transcription, or generated audio is unavailable.
 - Performance decisions include lazy-loading the 3D experience, Meshopt model compression, reduced mobile pixel ratio, disabled mobile shadows, resize observation, and reduced-motion support.
-- The optimized web GLB is approximately 4.1 MB, reduced from approximately 22.6 MB while preserving the rig, morph targets, and 13 animation clips.
+- The optimized character GLB is approximately 4.1 MB, reduced from approximately 22.6 MB while preserving the original paper-cut model, rig and morph targets. The 18-clip movement library loads separately at runtime.
 - Visual direction: a paper-cut-inspired character with layered fiber texture, an architectural studio, dimensional shadows, human eye-level camera framing, electric aqua system lighting, and restrained amber detail. The intent is editorial and professional, not a generic glossy metaverse avatar or cyberpunk interface.
 - The character model and visual identity assets are excluded from the repository's MIT source-code license.
 - Privacy: microphone recordings are used only to transcribe the current question. The counterpart cannot send messages, book meetings, access private systems, or speak as the physical human Sadeq.

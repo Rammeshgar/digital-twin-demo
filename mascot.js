@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { createMovement } from './movement.mjs';
+import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs';
 
 const ui = {
     toggle: document.getElementById("ai-mascot-toggle"),
@@ -61,6 +63,8 @@ let camera;
 let renderer;
 let controls;
 let mixer;
+let movement;
+let movementElapsed=0;
 let model;
 let headBone;
 let neckBone;
@@ -88,7 +92,7 @@ let headLookApplied = false;
 let neckLookApplied = false;
 
 const MODEL_URL = "assets/sadeq-digital-twin.meshopt.glb";
-const MODEL_ASSET_VERSION = "20260825-12";
+const MODEL_ASSET_VERSION = "20260906-paper-18";
 const TRANSCRIBE_API_URL = "https://test-rammeshgar-webpage.netlify.app/api/transcribe";
 const VISEME_NAMES = ["AA/AH", "EE/IH", "OH/O", "OO/WQ", "FV", "MBP", "L", "TH"];
 const IDLE_ANIMATION = "Mascot_Idle_Subtle_30f";
@@ -305,6 +309,7 @@ async function loadMascot() {
         loader.setMeshoptDecoder(MeshoptDecoder);
         const gltf = await loader.loadAsync(`${MODEL_URL}?v=${MODEL_ASSET_VERSION}`);
         model = gltf.scene;
+        refineCharacter(model);
         scene.add(model);
 
         model.traverse((child) => {
@@ -327,7 +332,8 @@ async function loadMascot() {
 
         frameMascot();
 
-        if (gltf.animations.length) {
+        movement = await createMovement(model);
+        if (!movement && gltf.animations.length) {
             mixer = new THREE.AnimationMixer(model);
             for (const clip of gltf.animations) {
                 const action = mixer.clipAction(clip);
@@ -453,7 +459,9 @@ function animate() {
         neckLookApplied = false;
     }
 
-    mixer?.update(delta);
+    movementElapsed+=delta;
+    if(movement)movement.update(delta,state,movementElapsed);
+    else mixer?.update(delta);
 
     if (cameraTransition) {
         const progress = THREE.MathUtils.clamp((performance.now() - cameraTransition.startedAt) / cameraTransition.duration, 0, 1);
@@ -486,6 +494,7 @@ function animate() {
 
     updateGeneratedSpeechViseme();
     updateVisemes();
+    updateNaturalBlink(delta,matchMedia('(prefers-reduced-motion: reduce)').matches);
     renderer.render(scene, camera);
 }
 
@@ -840,6 +849,7 @@ function setupSpeechRecognition() {
     recognition.interimResults = true;
 
     recognition.onstart = () => {
+        state.listening = true;
         state.recognitionStarting = false;
         state.recognitionSubmitted = false;
         state.recognitionError = "";
@@ -879,6 +889,7 @@ function setupSpeechRecognition() {
         setStatus(state.recognitionError);
     };
     recognition.onend = () => {
+        state.listening = false;
         state.recognitionStarting = false;
         ui.mic.classList.remove("is-listening");
         ui.mic.disabled = state.busy;

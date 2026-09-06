@@ -106,7 +106,7 @@ Refer to the function source for the currently supported environment-variable na
 
 ## Performance decisions
 
-- Texture preparation and Meshopt compression reduce the web GLB from 22.6 MB to approximately 4.1 MB while preserving the rig, morph targets and all 13 animation clips.
+- Texture preparation and Meshopt compression reduce the web GLB from 22.6 MB to approximately 4.1 MB while preserving the original paper-cut character, rig and morph targets. The runtime adds an 18-clip movement library without replacing the approved model.
 - The 3D model loads only when the interactive viewer opens.
 - Mobile rendering uses a lower pixel ratio and disables expensive shadows.
 - Renderer resizing is observed instead of continuously polling layout.
