@@ -248,7 +248,8 @@ async function loadMascot() {
 
     const compactViewer = window.matchMedia("(max-width: 760px)").matches;
     renderer = new THREE.WebGLRenderer({ antialias: !compactViewer, alpha: true, powerPreference: compactViewer ? "low-power" : "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, compactViewer ? 1 : 1.5));
+    // Retain facial and hair detail on high-density phones without rendering at full 3x DPR.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.06;
