@@ -1,6 +1,6 @@
 # Sadeq Rezai — Verified Public Source of Truth
 
-Last reviewed: 2026-08-31
+Last reviewed: 2026-10-07
 Scope: public portfolio counterpart and Interactive 3D Digital Twin case study
 Rule: facts not present here must be treated as unknown
 
@@ -36,6 +36,7 @@ Sadeq's path has moved through data analysis, prompt work, web systems, testing,
 - Public location: Budapest, Hungary.
 - Public work authorization: authorized to work in Hungary.
 - Current search preference: suitable roles in Budapest and remote roles compatible with Hungary-based employment.
+- Current employment: not employed at FRAIA. Open to suitable work; specific availability and commitments must be confirmed directly with Sadeq.
 - Do not infer nationality, citizenship, immigration details, relocation plans, or eligibility outside Hungary.
 
 ## Experience
@@ -43,8 +44,8 @@ Sadeq's path has moved through data analysis, prompt work, web systems, testing,
 ### FRAIA
 
 - Public portfolio positioning: Configuration, Quality & AI-Enabled Systems Specialist.
-- LinkedIn headline wording previously shared by Sadeq: Configuration Consultant at FRAIA.
-- Dates shown publicly: April 2025 to present.
+- Role: Configuration Consultant, a previous role rather than a current employer.
+- Dates confirmed by Sadeq: April 2025 to September 2026.
 - The public career progression includes prompt work, web systems, test engineering, and configuration-management responsibilities.
 - Publicly described work includes configuration workflows, browser and API validation, CI/CD, analytics, and production-oriented AI-assisted delivery.
 - Do not reveal or invent confidential clinical, customer, architectural, or company information.
@@ -104,7 +105,7 @@ Do not assign years of experience, seniority levels, certifications, or mastery 
 - Lip movement combines facial viseme targets with audio energy and transcript timing. The interface delays performance until speech is ready to reduce clipped first words.
 - Failure handling keeps text chat available when WebGL, microphone access, speech recognition, transcription, or generated audio is unavailable.
 - Performance decisions include lazy-loading the 3D experience, Meshopt model compression, reduced mobile pixel ratio, disabled mobile shadows, resize observation, and reduced-motion support.
-- The optimized character GLB is approximately 4.1 MB, reduced from approximately 22.6 MB while preserving the original paper-cut model, rig and morph targets. The 18-clip movement library loads separately at runtime.
+- The current full-detail paper-cut character is approximately 20.6 MB and loads only when the assistant is opened. Earlier compressed variants were smaller. The movement library loads separately at runtime.
 - Visual direction: a paper-cut-inspired character with layered fiber texture, an architectural studio, dimensional shadows, human eye-level camera framing, electric aqua system lighting, and restrained amber detail. The intent is editorial and professional, not a generic glossy metaverse avatar or cyberpunk interface.
 - The character model and visual identity assets are excluded from the repository's MIT source-code license.
 - Privacy: microphone recordings are used only to transcribe the current question. The counterpart cannot send messages, book meetings, access private systems, or speak as the physical human Sadeq.
@@ -181,7 +182,7 @@ Do not assign years of experience, seniority levels, certifications, or mastery 
 - LinkedIn: https://www.linkedin.com/in/sadeqrezai/
 - GitHub: https://github.com/Rammeshgar
 - Public email: rezaisadeq0@gmail.com
-- Portfolio contact form: available in the Contact section.
+- Portfolio contact: email link and a copy-email button in the Contact section.
 - A phone number has appeared on an earlier public portfolio, but the AI counterpart should not volunteer it. Prefer email or LinkedIn.
 
 The AI counterpart cannot send a message, submit the contact form, book a meeting, accept work, or confirm that Sadeq has seen an inquiry.
@@ -190,7 +191,7 @@ The AI counterpart cannot send a message, submit the contact form, book a meetin
 
 - Farsi: native.
 - English: C1.
-- Hungarian: B2.
+- Hungarian: intermediate, self-reported between B1 and B2. Do not describe it as fluent or guarantee B2.
 - German: A2.
 
 These are self-reported public proficiency levels. Do not infer formal certificates.

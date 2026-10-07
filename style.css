@@ -35,3 +35,39 @@
 .ai-mascot-toggle:hover .ai-mascot-toggle__content strong{color:var(--aqua)}
 .ai-open .ai-mascot-toggle{display:none}
 @media(max-width:700px){.ai-mascot-toggle{grid-template-columns:1fr;min-height:650px}.ai-mascot-toggle img{height:400px}.ai-mascot-toggle__content{padding:26px}.ai-mascot-toggle__content strong{font-size:38px}}
+
+/* Companion to the portfolio's paper, forest and copper palette. */
+:root{--ink:#102726;--surface:#163431;--surface-2:#203d36;--aqua:#c9d9cb;--amber:#edba9e;--ivory:#f7f3ec;--muted:#becbc1;--line:rgba(201,217,203,.24)}
+body{background-image:radial-gradient(ellipse at 80% 0,rgba(201,217,203,.07),transparent 45%);background-size:auto}
+.site-header{background:#102726f2;border-radius:6px}
+.identity__mark{background:#142e2e;border-color:#c9d9cb66;box-shadow:none;border-radius:5px}
+.identity small,.eyebrow{font-size:11px;letter-spacing:.08em}
+.site-header nav a{font-size:12px;letter-spacing:.04em;border-radius:3px}
+.site-header .nav-cta{border-color:var(--line)}
+.hero-lead{color:var(--muted)}
+.proof-strip span{background:var(--surface);font-size:12px}
+.hero-note{color:var(--muted);font-size:11px;line-height:1.7}
+.ai-mascot-panel,.ai-mascot-toggle{background:var(--surface);border-color:var(--line);border-radius:8px;box-shadow:0 24px 70px #00000025}
+.ai-mascot-header{background:var(--ink)}
+.ai-mascot-kicker{font-size:10px}
+.ai-mascot-stage{background:var(--surface)}
+.ai-stage-grid{opacity:.12}
+.ai-mascot-loader{background:var(--surface)}
+.ai-mascot-loader small{font-size:12px}
+.ai-icon-btn,.ai-chat-action{border-radius:5px;color:var(--ivory)}
+.ai-prompt-list button{border-radius:4px;color:var(--ivory)}
+.ai-message{font-size:15px;line-height:1.7;border-radius:6px}
+.ai-message-bot{background:#203d36;color:var(--ivory)}
+.ai-message-user{background:var(--aqua);color:var(--ink)}
+.ai-chat-form input{border-radius:5px}
+.ai-mascot-note{font-size:12px;line-height:1.6;color:var(--muted)}
+.ai-send-btn{color:var(--ink)}
+.evidence-grid article{background:var(--ink)}
+.stack-line span{color:var(--muted);font-size:12px}
+.art-direction__visual{background:var(--surface);box-shadow:0 20px 45px #00000020}
+.art-direction__visual:after{background:none}
+.art-direction dt{font-size:11px}
+.art-direction dd{color:var(--muted);font-size:14px}
+.ai-mascot-toggle__content{background:var(--ink)}
+.ai-mascot-toggle__content small{font-size:11px}
+@media(max-width:560px){.ai-mascot-panel{border-radius:6px}.ai-mascot-header{gap:10px}.ai-mascot-header>div:first-child{min-width:0}.ai-mascot-header-actions{flex-shrink:0}.ai-mascot-header strong{line-height:1.25}.ai-mascot-note{font-size:12px}.site-header .nav-cta{font-size:11px}.ai-prompt-list button{font-size:13px}}
