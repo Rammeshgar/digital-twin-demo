@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head><script src="explainers/portfolio-theme.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#102726">
@@ -25,7 +25,7 @@
   <meta name="twitter:image:alt" content="Sadeq Rezai's interactive 3D digital twin in its paper studio">
   <title>AI Digital Twin Case Study — Sadeq Rezai</title>
   <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="explainers/case-tools.css"><script src="explainers/case-study.js" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -89,8 +89,8 @@
   <script type="importmap">
     {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/"}}
   </script>
-</head>
-<body>
+<link rel="stylesheet" href="explainers/portfolio-theme.css"></head>
+<body data-case="digital-twin">
   <a class="skip-link" href="#evidence">Skip to technical evidence</a>
 
   <header class="site-header">
@@ -100,7 +100,7 @@
     </a>
     <nav aria-label="Primary navigation">
       <a href="#demo">Demo</a>
-      <a href="#evidence">Evidence</a>
+      <a href="#inside">How it works</a><a href="#evidence">Evidence</a>
       <a href="#architecture">Architecture</a>
       <a class="nav-cta" href="../">Portfolio ↗</a>
     </nav>
@@ -174,6 +174,8 @@
       </button>
     </section>
 
+<section class="explainer wrap" id="inside" aria-labelledby="inside-heading"><div class="section-top"><div><p class="eyebrow">Inside the project</p><h2 id="inside-heading">See how Digital Twin answers.</h2></div><p>Follow one question through the app.<br>Then watch how text, voice and movement connect.</p></div><div class="dual-explainers"><section class="explainer-panel" id="panel-map" aria-labelledby="map"><div class="tool-heading"><h3 id="map" tabindex="-1">System map</h3><a href="explainers/system-map.html" target="_blank" rel="noopener">Full-size map ↗</a></div><p class="panel-note">Select a box to understand its part in the reply. Code links are there if you want the detail.</p><iframe id="system-map" src="explainers/system-map.html?embed=1&amp;layout=compact" title="Digital Twin architecture with pinned source links" height="540" referrerpolicy="no-referrer"></iframe></section><section class="explainer-panel" id="panel-guide" aria-labelledby="guide"><div class="tool-heading"><h3 id="guide" tabindex="-1">Animated guide</h3><a href="explainers/guide.html?view=guide" target="_blank" rel="noopener">Full-size guide ↗</a></div><p class="panel-note">The card is your question. Its stop represents my work profile; the puppet is the optional 3D character and the tray is the text reply.</p><iframe id="animated-guide" data-src="explainers/guide.html?view=guide&amp;layout=compact" title="Interactive reply theatre: text, simulated performance and fallbacks" height="540" referrerpolicy="no-referrer"></iframe><noscript><p><a href="explainers/guide.html?view=guide">Open the complete guide →</a></p></noscript></section></div><p class="dual-note">The animation explains the software with a miniature theatre. It does not use your microphone or contact the assistant. Open either view for more room.</p></section>
+
     <section class="evidence" id="evidence">
       <div class="section-heading">
         <p class="eyebrow">Engineering evidence</p>
@@ -208,7 +210,7 @@
     <section class="architecture" id="architecture">
       <div class="section-heading">
         <p class="eyebrow">System architecture</p>
-        <h2>Input becomes a coordinated performance.</h2>
+        <h2>Technical workflow: from input to animation.</h2>
       </div>
       <ol class="system-route">
         <li><b>01</b><span>User input</span><small>Text or microphone</small></li>
@@ -219,6 +221,9 @@
       </ol>
       <div class="stack-line"><span>Three.js</span><span>WebGL</span><span>GLTF</span><span>Web Speech</span><span>MediaRecorder</span><span>Gemini</span><span>Netlify Functions</span></div>
     </section>
+<section id="integration-notes" aria-label="Contribution, implementation and limits"><section class="case-contribution wrap" aria-labelledby="contribution-heading"><div><p class="eyebrow">My contribution</p><h2 id="contribution-heading">Animation, speech<br><span class="serif">and text that stays usable.</span></h2></div><div><p>I integrated Three.js rendering, responsive camera behaviour, authored animation states, speech playback and audio/transcript-driven facial targets. I blended gestures so the character does not jump straight between unrelated poses.</p><p>The assistant uses a maintained professional source of truth. Browser recognition and recorded-audio transcription offer different input paths, while the readable chat survives optional model or WebGL failure. The 3D model loads only when the viewer is requested.</p></div></section>
+<section class="case-evidence wrap" aria-labelledby="evidence-heading"><h2 id="evidence-heading">What you can inspect.</h2><div class="evidence-notes"><article><h3>Implementation</h3><ul><li>Three.js rendering, GLB animation and morph targets.</li><li>Blended authored gestures and approximate mouth cues.</li><li>Typed questions, browser speech and recording fallback.</li><li>Server-side chat and transcription functions.</li></ul></article><article><h3>Authorship and assets</h3><p>Engineering, state orchestration and integration are documented separately from adapted animation resources and AI-assisted visual references. The source-code MIT licence does not grant reuse of the character likeness, model or identity artwork.</p><a href="https://github.com/Rammeshgar/digital-twin-demo/blob/cc7771f05781b55bb07f43954b5b96fe687444d7/ASSET_NOTES.md" target="_blank" rel="noopener noreferrer">Read the asset provenance ↗</a></article></div></section>
+<section class="boundaries wrap" aria-labelledby="limits-heading"><h2 id="limits-heading">What this does—and doesn’t—show.</h2><p>The character is not a person and AI replies are not Sadeq speaking personally. Answers can be incorrect. Controlled context narrows the subject; it cannot guarantee truth. Mouth movement is approximate, not phoneme-perfect lip sync.</p><p>Microphone and speech features vary by browser and permission state. In the actual app, recordings are used to transcribe the current question; provider processing is remote. These teaching views make no microphone, recording, model-loading or provider request.</p><p>The map is a reviewed overview of source revision <code>cc7771f</code>, not a continuously updated dependency graph.</p></section></section>
   </main>
 
   <footer><span>Sadeq Rezai · Budapest</span><a href="https://github.com/Rammeshgar">GitHub ↗</a><a href="https://www.linkedin.com/in/sadeqrezai">LinkedIn ↗</a></footer>
