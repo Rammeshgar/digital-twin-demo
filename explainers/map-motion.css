@@ -1,0 +1,23 @@
+/* Native SVG motion follows the existing directed paths; no JS frame loop. */
+html body,html body[data-theme]{--accent:var(--case-accent,#9b4a30);--focus:var(--case-accent,#9b4a30)}
+html body{--map-packet-ink:#142e2e}
+html[data-theme=dark] body{--map-packet-ink:#fff4da}
+@media(prefers-color-scheme:dark){html:not([data-theme]) body{--map-packet-ink:#fff4da}}
+.map-motion-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;margin:14px 0 18px}
+.map-motion-toolbar p{margin:0!important;font:12px/1.55 Inter,Arial,sans-serif;color:var(--secondary,var(--muted))}
+.map-motion-toolbar button{font:500 12px/1.4 Inter,Arial,sans-serif;min-height:44px;width:auto;margin:0;flex:none;text-align:center;padding:10px 13px;border:1px solid var(--control-border,var(--border));border-radius:4px;background:var(--surface-raised);color:var(--foreground);white-space:nowrap;cursor:pointer}
+.map-motion-toolbar button:focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:4px}
+.map-motion-toolbar button:disabled{cursor:default}
+.map-flow-signal{pointer-events:none;color:var(--accent);opacity:.35}
+.map-flow-signal[data-active=true]{opacity:1}
+.map-flow-signal[data-active=true] .map-flow-packet{color:var(--map-packet-ink)}
+.map-flow-halo{fill:var(--accent)!important;stroke:none!important;opacity:.24}
+.map-flow-core{fill:currentColor!important;stroke:none!important}
+.map-flow-arrow{fill:none!important;stroke:currentColor!important;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;marker-end:none}
+.map-flow-arrival{fill:none!important;stroke:currentColor!important;stroke-width:1.1;marker-end:none}
+svg [data-node] rect,svg path[data-edge],svg path[data-from][data-to]{transition:fill .18s,stroke .18s,opacity .18s}
+body[data-map-motion=paused] .map-flow-signal,body[data-map-motion=reduced] .map-flow-signal,body[data-map-motion=unavailable] .map-flow-signal{display:none}
+body[data-layout=compact] .map-motion-toolbar{margin:4px 0 12px;gap:6px 12px}
+body[data-layout=compact] .map-motion-toolbar p{font-size:11px}
+@media(prefers-reduced-motion:reduce){.map-flow-signal{display:none!important}svg [data-node] rect,svg path[data-edge],svg path[data-from][data-to]{transition:none}}
+@media print{.map-motion-toolbar,.map-flow-signal{display:none!important}}

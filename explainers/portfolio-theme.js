@@ -16,7 +16,7 @@
   if(!valid(theme))return;
   const changed=current!==theme;current=theme;root.dataset.theme=theme;root.style.colorScheme=theme;
   if(document.body)document.body.dataset.theme=theme;
-  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#111d1b':'#eee9df');
+  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#171d1b':'#f3efe6');
   refreshButtons();
   if(changed){document.dispatchEvent(new CustomEvent('portfolio-theme-change',{detail:{theme}}));document.querySelectorAll('iframe').forEach(tell);}
  }

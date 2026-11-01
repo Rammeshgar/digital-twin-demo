@@ -47,3 +47,227 @@ body[data-case=digital-twin] .ai-mascot-toggle{background:var(--surface-raised);
 body[data-case=digital-twin] #inside{background:var(--surface);color:var(--foreground);border-color:var(--border)}body[data-case=digital-twin] #inside h2,body[data-case=digital-twin] #inside h3{color:var(--foreground)}body[data-case=digital-twin] #inside a{color:var(--copper)}body[data-case=digital-twin] #inside .eyebrow{color:var(--secondary)}body[data-case=digital-twin] #inside iframe{background:var(--surface)}
 body[data-case=digital-twin] .theme-toggle{background:var(--surface);color:var(--foreground)}
 @media print{html:root,html:root[data-theme]{color-scheme:light;--surface:#fff;--surface-raised:#fff;--foreground:#142e2e;--secondary:#53635d;--accent:#9b4a30;--border:#53635d;--action-bg:#142e2e;--action-fg:#fff}.theme-toggle{display:none!important}html:root[data-theme] body.iso{background:#fff;color:#142e2e;--anatomy-page:#fff;--anatomy-card:#fff;--anatomy-paper:#fff;--anatomy-strong:#142e2e;--anatomy-text:#142e2e;--anatomy-muted:#53635d;--anatomy-face:#dce4d2;--anatomy-top:#e1e8d5;--anatomy-shade-0:#8d9f8c;--anatomy-shade-1:#a5b59f;--anatomy-shade-2:#bccab3;--anatomy-shade-3:#d2dcc7;--anatomy-hi:#142e2e;--anatomy-mid:#3e5b52;--anatomy-lo:#71837a;--anatomy-faint:#a6b2a6;--anatomy-lit:#7c3d26;--anatomy-lit-top:#dfbd97;--anatomy-lit-shade:#bd976f;--anatomy-dot:#142e2e}html:root[data-theme] body.iso .machine,html:root[data-theme] body.iso .figure-card,html:root[data-theme] body.iso .iso-stage,html:root[data-theme] body.iso .iso-page{background:#fff;color:#142e2e}}
+
+/* BEGIN PALETTE 02 */
+/* Balanced Studio — ivory and warm charcoal, with copper and sage accents.
+   Semantic surface, reading, action and evidence roles are shared by every page.
+   Bundled by tools/build-palette.mjs; no additional runtime dependency. */
+:root {
+  color-scheme:light;
+  --brand-ivory:#f3efe6;--brand-forest:#173a30;--brand-copper:#b9704b;--brand-sage:#c4d0bb;
+  --studio-accent:var(--accent);
+  /* Compatibility names keep the existing controls on the same palette. */
+  --brand-silver:var(--brand-ivory);--brand-aubergine:var(--brand-forest);--brand-gold:var(--accent);
+  --surface: #f3efe6;
+  --surface-raised: #faf7ef;
+  --foreground: #2a302d;
+  --secondary: #4c544d;
+  --accent: #965036;
+  --border: #acae9f;
+  --control-border: #7c8276;
+  --action-bg: #30463a;
+  --action-fg: #f3efe6;
+  --inverse-bg: #272f2a;
+  --inverse-fg: #f2eadc;
+  --inverse-muted: #c7c6ba;
+  --focal: #d8dfd0;
+  --focus: #965036;
+  --subtle: #e7e6dc;
+  --shadow-ink: #282e2412;
+  --card-surface: #ece9e1;
+  --card-inset: #e1e1d7;
+  --card-border: #7d8277;
+  --card-foreground: #2a302d;
+  --card-secondary: #464f46;
+  --card-shadow: 0 14px 32px -20px #282e2445;
+  --contact-surface: #3c4539;
+  --contact-ink: #fff0d6;
+  --contact-muted: #e9e2d2;
+  --contact-accent: #f3c29e;
+  --contact-line: #adb09a;
+  --contact-action: #f3e7cf;
+  --contact-action-ink: #2a302d;
+  --hero-gradient:linear-gradient(90deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 98%,transparent) 29%,color-mix(in srgb,var(--surface) 88%,transparent) 43%,color-mix(in srgb,var(--surface) 12%,transparent) 70%),linear-gradient(0deg,var(--surface),transparent 26%);
+}
+:root[data-theme=dark] {
+  color-scheme:dark;
+  --surface: #171d1b;
+  --surface-raised: #252b27;
+  --foreground: #f2eadc;
+  --secondary: #d8d1c4;
+  --accent: #edb495;
+  --border: #5f685e;
+  --control-border: #969c8e;
+  --action-bg: #c4d0bb;
+  --action-fg: #222b24;
+  --inverse-bg: #272f2a;
+  --inverse-fg: #f2eadc;
+  --inverse-muted: #c7c6ba;
+  --focal: #36443a;
+  --focus: #edb495;
+  --subtle: #303932;
+  --shadow-ink: #10151150;
+  --card-surface: #2c2e2a;
+  --card-inset: #232621;
+  --card-border: #899285;
+  --card-foreground: #f2eadc;
+  --card-secondary: #dfd7c9;
+  --card-shadow: 0 18px 40px -22px #101511b0;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme]){
+  color-scheme:dark;
+  --surface: #171d1b;
+  --surface-raised: #252b27;
+  --foreground: #f2eadc;
+  --secondary: #d8d1c4;
+  --accent: #edb495;
+  --border: #5f685e;
+  --control-border: #969c8e;
+  --action-bg: #c4d0bb;
+  --action-fg: #222b24;
+  --inverse-bg: #272f2a;
+  --inverse-fg: #f2eadc;
+  --inverse-muted: #c7c6ba;
+  --focal: #36443a;
+  --focus: #edb495;
+  --subtle: #303932;
+  --shadow-ink: #10151150;
+  --card-surface: #2c2e2a;
+  --card-inset: #232621;
+  --card-border: #899285;
+  --card-foreground: #f2eadc;
+  --card-secondary: #dfd7c9;
+  --card-shadow: 0 18px 40px -22px #101511b0;
+}}
+html:root body{--ink:var(--foreground);--paper:var(--surface);--pale:var(--surface-raised);--muted:var(--secondary);--accent:var(--studio-accent);--copper:var(--studio-accent);--line:var(--border);--mint:var(--brand-sage);--white:var(--surface-raised)}
+html{accent-color:var(--accent)}
+::selection{background:var(--accent);color:var(--surface)}
+html :focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.theme-toggle,.theme-toggle[aria-pressed=true] {border-color:var(--control-border)}
+.theme-toggle:focus-visible,html[data-theme=dark] :focus-visible {outline-color:var(--focus)}
+.page .intro-art:after,.page .hero-art:after {background:var(--hero-gradient)}
+.page .portfolio-intro h1 .serif,.case-page .project-intro h1 .serif {color:var(--foreground)}
+/* The original hero accents stay local; case pages and the teal ending keep their own roles. */
+.page #home{--hero-heading:var(--foreground);--hero-secondary:var(--secondary);--hero-accent:var(--accent);--hero-action-border:var(--action-bg)}
+.page #home h1,.page #home .quiet-link {color:var(--hero-heading)}
+.page #home h1 .serif {color:var(--hero-accent)}
+.page #home .intro-eyebrow,.page #home .intro-lead,.page #home .hero-availability,.page #home .intro-film-control {color:var(--hero-secondary)}
+.page #home .hero-availability>span {background:var(--hero-signal)}
+.page #home .quiet-link:hover,.page #home .intro-film-control button:hover {color:var(--hero-accent)}
+.page #home :focus-visible {outline-color:var(--hero-accent)}
+.page .button,.case-page .project-button,.project-actions .project-button {border:1px solid var(--foreground);font-weight:600}
+.page .button:hover,.case-page .project-button:hover,.project-actions .project-button:hover {background:var(--action-bg);color:var(--action-fg);box-shadow:0 4px 0 var(--foreground)}
+.page #home .button {background:var(--action-bg);color:var(--action-fg);border-color:var(--hero-action-border)}
+.page #home .button:hover {box-shadow:0 4px 0 var(--hero-action-border)}
+/* Carry the restored editorial accents into the project introductions. */
+html:root{--case-ink:var(--foreground);--case-accent:var(--accent);--case-action:var(--action-bg);--case-action-ink:var(--action-fg)}
+html .project-intro h1{color:var(--case-ink)}
+.case-page .project-intro h1 .serif,.project-intro h1 .serif{color:var(--case-accent)}
+html .project-intro .project-button,html .project-intro .project-button:hover{background:var(--case-action);color:var(--case-action-ink);border-color:var(--case-action)}
+html .dual-explainers .explainer-panel{border-color:var(--border);border-radius:8px;background:var(--surface-raised)}
+html .dual-explainers .tool-heading h3{color:var(--case-ink)}
+html .dual-explainers .tool-heading a{white-space:nowrap;flex-shrink:0}
+.guide-loop-note{display:block;margin-top:5px;font-size:12px;color:var(--secondary)}
+.page .project-index article {border-color:var(--border);box-shadow:0 4px 18px var(--shadow-ink)}
+.page .project-index .index-link {text-decoration-thickness:1px;text-underline-offset:5px}
+.page .work a:hover,.case-page a:hover {color:var(--accent)}
+.page #contact {background:var(--contact-surface);color:var(--contact-ink);border-top:1px solid var(--contact-line)}
+.page #contact .mono,.page #contact .footer {color:var(--contact-muted)}
+.page #contact h2,.page #contact .email-line,.page #contact .footer a {color:var(--contact-ink)}
+.page #contact h2 .serif,.page #contact a:hover {color:var(--contact-accent)}
+.page #contact .footer {border-color:var(--contact-line)}
+.page #contact .email-line button {color:var(--contact-ink);border:1px solid var(--contact-line);background:#ffffff0c;min-height:44px;padding:10px 14px;border-radius:4px}
+.page #contact .email-line button:hover {background:#ffffff20}
+.page #contact :focus-visible {outline-color:var(--contact-action)}
+.page #contact .round-contact,.page #contact .round-contact:hover {background:var(--contact-action);color:var(--contact-action-ink)!important;box-shadow:0 8px 24px #0c30384a}
+.page .hero-availability>span {background:var(--accent)}
+.page .motion-control,.page #hero-twin {background:var(--surface-raised);color:var(--foreground);border-color:var(--control-border)}
+.page .view-tabs button[aria-selected=true],.case-page .view-tabs button[aria-selected=true] {background:var(--foreground);color:var(--surface);border-color:var(--brand-gold)}
+.page .project-preview-controls button {border-color:var(--control-border)}
+.case-page .view-tabs button[aria-selected=true]:hover {color:var(--surface)}
+.flow-diagram .node-focal .node-box {fill:var(--focal);stroke:var(--accent)}
+.case-page .product-image,.case-page .product-caption {border-color:var(--border)}
+/* Keep node masks, labels and selection synchronized in BOTH themes. */
+html .map-canvas svg rect,html svg [data-node] rect,html svg .node-box,html svg .node rect {fill:var(--surface-raised);stroke:var(--border)}
+html svg rect.paper,html svg .paper,html svg .node-mask,html svg .edge-label rect {fill:var(--surface)}
+html svg rect.zone,html svg .zone {fill:var(--surface-raised);stroke:var(--border)}
+html .map-canvas svg text,html svg [data-node] text,html svg .node text,html svg .label {fill:var(--foreground)}
+html .map-canvas svg .sub,html .map-canvas svg .node-sub,html svg .legend,html svg .zone-label,html svg .node-tag,html svg .edge-label text {fill:var(--secondary)}
+html [data-node][data-selected=true] rect,html svg .node.selected rect,html .node.is-selected rect {stroke:var(--accent);fill:var(--focal)}
+html [data-edge] {stroke:var(--secondary)}
+html [data-edge][data-selected=true],html [data-edge].selected,html [data-edge][data-incident=true],html [data-edge].connected {stroke:var(--accent)}
+html marker path,html marker polygon {fill:var(--secondary)}
+html marker[id$="-selected"] path,html marker[id$="-selected"] polygon {fill:var(--accent)}
+html .selected-note,html .selected-detail,html .component-detail,html aside {background:var(--surface);color:var(--foreground);border-color:var(--border)}
+html .map-layout button:not(.node-hit),html .canvas-toolbar button {border-color:var(--control-border)}
+html .map-layout button[aria-pressed=true]:not(.node-hit) {background:var(--action-bg);color:var(--action-fg);border-color:var(--foreground)}
+html .node-hit,html[data-theme=dark] .node-hit {background:transparent}
+/* Four-tone metal and warm signal lights; geometry and animation stay original. */
+html:root body.iso{
+ --anatomy-page:var(--surface);--anatomy-card:var(--surface);--anatomy-paper:var(--surface);
+ --anatomy-strong:var(--foreground);--anatomy-text:var(--foreground);--anatomy-muted:var(--secondary);
+ --anatomy-face:#d2d4c9;--anatomy-top:#e8e8dd;
+ --anatomy-shade-0:#858d80;--anatomy-shade-1:#a1a897;--anatomy-shade-2:#bcc2b1;--anatomy-shade-3:#d0d3c3;
+ --anatomy-hi:#173a30;--anatomy-mid:#466852;--anatomy-lo:#6c8972;--anatomy-faint:#9aaf95;
+ --anatomy-lit:#985437;--anatomy-lit-top:#e6b585;--anatomy-lit-shade:#b57b4e;--anatomy-dot:#173a30;
+ --anatomy-halo:#658168;--anatomy-halo-opacity:.22;background:var(--surface);color:var(--foreground);
+}
+html:root[data-theme=dark] body.iso{
+ --anatomy-page:var(--surface);--anatomy-card:var(--surface);--anatomy-paper:var(--surface);
+ --anatomy-strong:var(--foreground);--anatomy-text:var(--foreground);--anatomy-muted:var(--secondary);
+ --anatomy-face:#4a5148;--anatomy-top:#7a8171;
+ --anatomy-shade-0:#252d28;--anatomy-shade-1:#363e36;--anatomy-shade-2:#4a5148;--anatomy-shade-3:#626b5b;
+ --anatomy-hi:#f2ecdf;--anatomy-mid:#c8c4b8;--anatomy-lo:#a6aea0;--anatomy-faint:#697364;
+ --anatomy-lit:#edb495;--anatomy-lit-top:#f3d3a8;--anatomy-lit-shade:#ad7d55;--anatomy-dot:#f2ecdf;
+ --anatomy-halo:#06160e;--anatomy-halo-opacity:.6;background:var(--surface);color:var(--foreground);
+}
+html body.iso .machine,html body.iso .figure-card,html body.iso .iso-stage,html body.iso .iso-page {background:var(--surface);color:var(--foreground)}
+html body.iso h1,html body.iso h2,html body.iso h3,html body.iso strong {color:var(--foreground)}
+html body.iso button {color:var(--foreground);background:var(--surface-raised);border-color:var(--control-border)}
+html body.iso button[aria-pressed=true] {color:var(--action-fg);background:var(--action-bg);border-color:var(--foreground)}
+html body.iso button[data-theme-toggle] {color:var(--foreground);background:var(--surface)}
+html body[data-layout=preview],html body[data-layout=preview] .iso-page,html body[data-layout=preview] .machine {background:var(--surface)!important}
+html:root .ai-mascot-toggle,html:root .ai-mascot-toggle:hover {background:var(--inverse-bg);color:var(--inverse-fg);border-color:var(--border);box-shadow:0 8px 30px var(--shadow-ink)}
+html:root .ai-mascot-toggle__orb {background:var(--brand-gold);color:var(--brand-aubergine)}
+html:root .ai-mascot-stage,html:root .ai-message-bot,html:root .ai-mascot-toggle__content {background:var(--surface-raised)}
+html:root .ai-message-user,html:root .ai-send-btn {background:var(--action-bg);color:var(--action-fg)}
+html:root .ai-chat-form input {background:var(--surface-raised);color:var(--foreground);border-color:var(--control-border)}
+html:root .ai-mascot-loader {background:var(--surface);color:var(--foreground)}
+html .ai-icon-btn:hover,html .ai-prompt-list button:hover,html .close-dialog:hover,html .menu-btn:hover {background:var(--focal);border-color:var(--accent);color:var(--foreground)}
+html:root .ai-message-error {background:var(--focal);color:var(--foreground)}
+@media(max-width:700px){:root{--hero-gradient:linear-gradient(180deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 99%,transparent) 48%,color-mix(in srgb,var(--surface) 90%,transparent) 61%,color-mix(in srgb,var(--surface) 8%,transparent) 82%,var(--surface) 100%)}}
+@media(max-width:560px) {
+  .site-header {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center}
+  .site-header>.brand {grid-column:1;grid-row:1;min-width:0}
+  .site-header>.theme-toggle {grid-column:2;grid-row:1}
+  .site-header>nav {grid-column:1/-1;grid-row:2;justify-content:flex-start}
+}
+@media print{
+ html:root,html:root[data-theme]{color-scheme:light;--surface:#fff;--surface-raised:#fff;--foreground:#173a30;--secondary:#486357;--accent:#965036;--border:#718578;--action-bg:#fff;--action-fg:#173a30;--case-ink:#173a30;--case-accent:#965036;--case-action:#fff;--case-action-ink:#173a30;--card-surface:#fff;--card-foreground:#173a30;--card-secondary:#486357}
+ html:root[data-theme] body.iso{background:#fff;color:#173a30;--anatomy-page:#fff;--anatomy-card:#fff;--anatomy-paper:#fff;--anatomy-strong:#173a30;--anatomy-text:#173a30;--anatomy-muted:#486357;--anatomy-face:#d2d4c9;--anatomy-top:#e8e8dd;--anatomy-shade-0:#858d80;--anatomy-shade-1:#a1a897;--anatomy-shade-2:#bcc2b1;--anatomy-shade-3:#d0d3c3;--anatomy-hi:#173a30;--anatomy-mid:#466852;--anatomy-lit:#985437;--anatomy-dot:#173a30}
+ html:root .page #home,html:root[data-theme] .page #home{--hero-heading:#173a30;--hero-secondary:#486357;--hero-accent:#965036;--hero-action-border:#173a30;--action-bg:#fff;--action-fg:#173a30}
+ html:root[data-theme] body.iso .machine,html:root[data-theme] body.iso .iso-page{background:#fff;color:#173a30}
+}
+
+/* One paired foreground/background contract for controls, after legacy theme rules. */
+html:root{--control-hover-bg:var(--accent);--control-hover-fg:var(--surface);--control-hover-border:var(--accent);--section-accent:var(--accent);--link-hover:var(--accent)}
+.page #contact{--control-hover-bg:var(--contact-action);--control-hover-fg:var(--contact-action-ink);--control-hover-border:var(--contact-action)}
+html:root body :is(button,summary,a.button,a.project-button,a.nav-cta,a.see-guide,a.send,a.round-contact):not(.node-hit){transition:transform .2s cubic-bezier(.2,.7,.3,1),background-color .2s,color .2s,border-color .2s,box-shadow .2s}
+html:root body :is(button,summary,a.button,a.project-button,a.nav-cta,a.see-guide,a.send,a.round-contact):not(.node-hit):not(:disabled):not([aria-disabled=true]):focus-visible{background:var(--control-hover-bg)!important;color:var(--control-hover-fg)!important;border-color:var(--control-hover-border)!important;box-shadow:none}
+/* Text links never inherit the old filled-button hover background. */
+html:root body .page #home .quiet-link{background:transparent;box-shadow:none}
+html:root body .page #home .quiet-link:focus-visible{background:transparent!important;color:var(--hero-accent)!important;border-color:var(--hero-accent);text-decoration:underline;text-underline-offset:5px}
+html:root .page #work .section-heading .mono,html:root .page .section-label,html:root .page #digital-twin .twin-copy .section-label,html:root .page #approach .step .mono{color:var(--section-accent)!important}
+html:root .page #digital-twin .twin-copy h2 .serif{color:var(--section-accent)}
+html:root body[data-case=digital-twin] h1 em,html:root body[data-case=digital-twin] .nav-cta{color:var(--case-accent)}
+@media(hover:hover){
+ html:root body :is(button,summary,a.button,a.project-button,a.nav-cta,a.see-guide,a.send,a.round-contact):not(.node-hit):not(:disabled):not([aria-disabled=true]):hover{background:var(--control-hover-bg)!important;color:var(--control-hover-fg)!important;border-color:var(--control-hover-border)!important;box-shadow:0 5px 12px -8px var(--foreground);transform:translateY(-2px)}
+ html:root body .page #home .quiet-link:hover{background:transparent!important;color:var(--hero-accent)!important;border-color:var(--hero-accent);box-shadow:none;text-decoration:underline;text-underline-offset:5px}
+ html:root body .page .contact-link:hover{color:var(--link-hover)}
+ html:root body .page .contact-link:hover span{background:var(--control-hover-bg);color:var(--control-hover-fg);border-color:var(--control-hover-border)}
+ html:root body .node-hit:hover{background:transparent!important;box-shadow:inset 0 0 0 2px var(--accent)}
+ html:root body :is(.about-links,.index-evidence-links,.site-header nav,.site-footer) a:hover{color:var(--link-hover);text-decoration:underline;text-underline-offset:5px}
+}
+html:root body :is(button,summary,a.button,a.project-button,a.nav-cta,a.see-guide,a.send,a.round-contact):not(.node-hit):not(:disabled):not([aria-disabled=true]):active{transform:translateY(0);box-shadow:none}
+@media(prefers-reduced-motion:reduce){html:root body :is(button,summary,a.button,a.project-button,a.nav-cta,a.see-guide,a.send,a.round-contact){transition:none;transform:none!important}}
+@media print{html:root body button,html:root body summary{box-shadow:none}}
