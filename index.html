@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="en">
-<head><script src="explainers/portfolio-theme.js"></script>
+<head>
   <meta charset="utf-8">
+  <script src="studio-entry.js"></script>
+  <script src="explainers/portfolio-theme.js"></script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#102726">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="https://rammeshgar.github.io/digital-twin-demo/">
-  <meta name="description" content="Sadeq Rezai's interactive 3D digital twin: animation blending, speech, lip movement, controlled AI context and resilient web fallbacks.">
+  <meta name="description" content="Ask Sadeq Rezai's interactive 3D portfolio assistant about his projects and experience using text or optional voice.">
   <meta name="author" content="Sadeq Rezai">
-  <meta property="og:title" content="AI Digital Twin Case Study — Sadeq Rezai">
-  <meta property="og:description" content="A production-oriented experiment in character animation, voice, controlled AI context and real-time web interaction.">
-  <meta property="og:type" content="article">
+  <meta property="og:title" content="Sadeq’s Digital Twin — AI Portfolio Assistant">
+  <meta property="og:description" content="Ask about Sadeq’s work by text or voice in an interactive paper-cut 3D studio.">
+  <meta property="og:type" content="website">
   <meta property="og:site_name" content="Sadeq Rezai — The Working Studio">
   <meta property="og:locale" content="en_US">
   <meta property="og:url" content="https://rammeshgar.github.io/digital-twin-demo/">
@@ -19,45 +21,40 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Sadeq Rezai's interactive 3D digital twin">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AI Digital Twin Case Study — Sadeq Rezai">
-  <meta name="twitter:description" content="Animation, voice, controlled AI context and resilient web interaction.">
+  <meta name="twitter:title" content="Sadeq’s Digital Twin — AI Portfolio Assistant">
+  <meta name="twitter:description" content="Explore Sadeq’s work through conversation, with text, optional voice and a moving 3D character.">
   <meta name="twitter:image" content="https://rammeshgar.github.io/digital-twin-demo/assets/social-preview.png">
   <meta name="twitter:image:alt" content="Sadeq Rezai's interactive 3D digital twin in its paper studio">
-  <title>AI Digital Twin Case Study — Sadeq Rezai</title>
+  <title>Sadeq's Digital Twin — AI Portfolio Assistant</title>
   <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="explainers/case-tools.css"><script src="explainers/case-study.js" defer></script>
+  <link rel="stylesheet" href="style.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "TechArticle",
-        "@id": "https://rammeshgar.github.io/digital-twin-demo/#case-study",
+        "@type": "SoftwareApplication",
+        "@id": "https://rammeshgar.github.io/digital-twin-demo/#assistant",
         "url": "https://rammeshgar.github.io/digital-twin-demo/",
-        "headline": "AI Digital Twin Case Study",
-        "description": "A browser-based 3D character combining authored animation, continuous gesture blending, speech-driven lip movement, controlled AI context and resilient web fallbacks.",
+        "name": "Sadeq’s Interactive 3D Digital Twin",
+        "applicationCategory": "WebApplication",
+        "operatingSystem": "Web browser",
+        "description": "Ask Sadeq’s AI portfolio assistant about his public work using text, optional voice and an interactive 3D character.",
         "image": "https://rammeshgar.github.io/digital-twin-demo/assets/social-preview.png",
         "inLanguage": "en",
-        "dateModified": "2026-10-07",
         "author": { "@id": "https://rammeshgar.github.io/#sadeq-rezai" },
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://rammeshgar.github.io/digital-twin-demo/"
         },
-        "about": {
-          "@type": "SoftwareApplication",
-          "name": "Sadeq's Interactive 3D Digital Twin",
-          "applicationCategory": "WebApplication",
-          "operatingSystem": "Web browser",
-          "url": "https://rammeshgar.github.io/digital-twin-demo/",
-          "featureList": [
+        "subjectOf": { "@id": "https://rammeshgar.github.io/digital-twin/" },
+        "featureList": [
             "18 authored animation clips",
             "Speech-driven lip movement with 8 viseme targets",
             "Voice and text interaction",
             "Controlled professional context",
             "Graceful WebGL fallbacks"
-          ]
-        }
+        ]
       },
       {
         "@type": "Person",
@@ -73,54 +70,83 @@
   }
   </script>
   <script type="importmap">
-    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/"}}
+    {"imports":{"three":"./vendor/three/build/three.module.min.js","three/addons/":"./vendor/three/examples/jsm/"}}
   </script>
-<link rel="stylesheet" href="explainers/portfolio-theme.css"><script defer src="/assets/portfolio-analytics.js?v=20261107"></script>
+<link rel="stylesheet" href="explainers/portfolio-theme.css"><link rel="stylesheet" href="studio-v2.css">
 </head>
 <body data-case="digital-twin">
-  <a class="skip-link" href="#evidence">Skip to technical evidence</a>
+  <a class="skip-link" href="#demo">Skip to the studio</a>
 
   <header class="site-header">
     <a class="identity" href="../" aria-label="Open Sadeq Rezai's portfolio">
       <span class="identity__mark" aria-hidden="true"><span class="identity__route"></span></span>
-      <span><strong>Sadeq Rezai</strong><small>Digital Twin / Case Study</small></span>
+      <span><strong>Sadeq Rezai</strong><small>The Working Studio</small></span>
     </a>
     <nav aria-label="Primary navigation">
-      <a href="#demo">Demo</a>
-      <a href="#inside">How it works</a><a href="#evidence">Evidence</a>
-      <a href="#architecture">Architecture</a>
+      <a href="#demo" aria-current="page">Studio</a>
+      <a href="/digital-twin/#inside">How it works</a>
+      <a href="/digital-twin/#design">Design</a>
+      <a href="/digital-twin/#limits">Limits</a>
       <a class="nav-cta" href="../">Portfolio ↗</a>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark theme" aria-pressed="false" hidden><span data-theme-icon aria-hidden="true">☾</span><span class="theme-label">Theme</span></button>
     </nav>
   </header>
 
   <main>
-    <section class="hero" id="demo">
-      <div class="hero-copy">
-        <p class="eyebrow">Interactive AI System / WebGL</p>
-        <h1>A digital twin that can <em>explain the work.</em></h1>
-        <p class="hero-lead">A browser-based 3D character combining authored animation, continuous gesture blending, speech-driven lip movement, controlled AI context and graceful fallbacks.</p>
-        <div class="proof-strip" aria-label="Key system capabilities">
-          <span><b>18</b> animation clips</span>
-          <span><b>8</b> viseme targets</span>
-          <span><b>30</b> FPS authored motion</span>
+    <section class="hero" id="demo" tabindex="-1">
+      <div class="hero-intro">
+        <div class="hero-copy">
+          <p class="eyebrow studio-kicker"><span aria-hidden="true"></span> Interactive digital twin / 02</p>
+          <h1>Meet my<br><em>digital twin.</em></h1>
+          <p class="hero-lead">Ask about my work, how I build things, or how this character moves and speaks. The answer comes from my AI counterpart, by text or voice.</p>
+          <div class="hero-actions">
+            <button id="ai-mascot-toggle" class="ai-mascot-toggle" type="button" aria-controls="ai-mascot-panel" aria-expanded="false">
+              <span class="ai-mascot-toggle__label">Enter the studio</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+            </button>
+            <a class="studio-textlink" href="/digital-twin/">Read the case study</a>
+          </div>
+          <p class="hero-note">3D loads on request. No microphone required.</p>
+          <dl class="proof-strip" aria-label="Character production details">
+            <div><dt><b>18</b></dt><dd>Motion clips</dd></div>
+            <div><dt><b>08</b></dt><dd>Mouth shapes</dd></div>
+            <div><dt><b>30</b><small> fps</small></dt><dd>Authored motion</dd></div>
+          </dl>
         </div>
-        <p class="hero-note">Drag to inspect · scroll to zoom · ask a question by voice or text</p>
+        <figure class="studio-cover">
+          <div class="studio-cover__stage">
+            <img src="assets/studio-v2-preview.webp" width="883" height="781" alt="Sadeq's paper-cut-inspired digital character in the actual graphite and copper 3D studio" fetchpriority="high">
+            <div class="studio-cover__plate"><span class="studio-cover__index">THE CHARACTER</span><span>Paper-cut<br>portrait study</span></div>
+            <span class="studio-cover__corner" aria-hidden="true"></span>
+            <span class="studio-cover__stamp" aria-hidden="true">PREVIEW<br>STUDIO / 02</span>
+          </div>
+          <figcaption><span>Captured from the new interactive 3D studio.</span><span>Ready to explore <i aria-hidden="true"></i></span></figcaption>
+        </figure>
       </div>
 
-      <section id="ai-mascot-panel" class="ai-mascot-panel is-expanded" aria-label="Interactive digital twin" aria-hidden="true">
+      <section id="ai-mascot-panel" class="ai-mascot-panel is-expanded" aria-labelledby="studio-heading" aria-hidden="true" data-studio-state="loading">
         <header class="ai-mascot-header">
           <div>
-            <p class="ai-mascot-kicker">DIGITAL TWIN / ONLINE</p>
-            <strong>Sadeq's engineering guide</strong>
-            <span id="ai-mascot-status">Chat ready · loading the 3D mascot</span>
+            <p class="ai-mascot-kicker">Sadeq’s studio</p>
+            <h2 id="studio-heading">Digital twin</h2>
+            <span id="ai-mascot-status" role="status" aria-live="polite">Chat available · loading the character</span>
           </div>
           <div class="ai-mascot-header-actions">
-            <button id="ai-mascot-voice-toggle" class="ai-icon-btn" type="button" title="Mute voice" aria-label="Mute voice" aria-pressed="true">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.8 8.5H3.5v7h3.3L11 19V5Z"/><path d="M15 9.2c1.5 1.5 1.5 4.1 0 5.6M18 6.5c3 3 3 8 0 11"/></svg>
+            <button id="ai-mascot-voice-toggle" class="ai-icon-btn" type="button" title="Mute voice" aria-label="Voice output" aria-pressed="true">
+              <span class="studio-action-icon" data-icon="volume" aria-hidden="true">
+                <svg class="icon-volume" viewBox="0 0 24 24"><path d="M11 5 6.8 8.5H3.5v7h3.3L11 19V5Z"/><path d="M15 9.2c1.5 1.5 1.5 4.1 0 5.6M18 6.5c3 3 3 8 0 11"/></svg>
+                <svg class="icon-muted" viewBox="0 0 24 24"><path d="M11 5 6.8 8.5H3.5v7h3.3L11 19V5Z"/><path d="m16 9 6 6m0-6-6 6"/></svg>
+              </span><span class="studio-action-label">Voice</span>
             </button>
-            <button id="ai-mascot-expand" class="ai-icon-btn" type="button" title="Use compact viewer" aria-label="Use compact mascot viewer" aria-pressed="true">
-              <span data-icon="compress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h4.5V4M20 8.5h-4.5V4M15.5 20v-4.5H20M8.5 20v-4.5H4"/></svg></span>
+            <button id="studio-sound-toggle" class="ai-icon-btn" type="button" title="Enable interface sounds" aria-label="Interface sounds" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 18V5l10-2v13M10 9l10-2M10 18c0 1.7-1.8 3-4 3s-3.5-1-3.5-2.3 1.8-2.7 4-2.7c1.5 0 2.7.8 3.5 2ZM20 16c0 1.7-1.8 3-4 3s-3.5-1-3.5-2.3 1.8-2.7 4-2.7c1.5 0 2.7.8 3.5 2Z"/></svg><span class="studio-action-label">Sounds off</span>
             </button>
+            <button id="ai-mascot-expand" class="ai-icon-btn" type="button" title="Use compact viewer" aria-label="Expanded character viewer" aria-controls="ai-mascot-stage" aria-pressed="true">
+              <span class="studio-action-icon" data-icon="compress" aria-hidden="true"><svg class="icon-compress" viewBox="0 0 24 24"><path d="M4 8.5h4.5V4M20 8.5h-4.5V4M15.5 20v-4.5H20M8.5 20v-4.5H4"/></svg><svg class="icon-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></span>
+            </button>
+            <a class="ai-icon-btn studio-open-standalone" id="ai-open-standalone" href="/digital-twin-demo/" target="_top" aria-label="Open standalone assistant" title="Open standalone assistant">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6M19 5l-9 9M11 6H5v13h13v-6"/></svg><span class="studio-action-label">Full app</span>
+            </a>
             <button id="ai-mascot-close" class="ai-icon-btn ai-icon-btn--close" type="button" title="Close demo" aria-label="Close digital twin demo">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 6.5 11 11m0-11-11 11"/></svg>
             </button>
@@ -128,92 +154,40 @@
         </header>
         <div id="ai-mascot-stage" class="ai-mascot-stage">
           <div class="ai-stage-grid" aria-hidden="true"></div>
+          <div class="studio-view-hud" aria-hidden="true"><span>STUDIO / PORTRAIT</span><span class="studio-stage-mode"></span></div>
+          <div class="studio-view-controls"><span class="studio-orbit-hint" aria-hidden="true"><span class="pointer-hint">Drag to orbit · scroll to zoom</span><span class="touch-hint">Drag to orbit · pinch to zoom</span></span><button id="ai-mascot-reset-view" type="button" class="studio-reset" data-studio-camera="reset" title="Reset view" aria-label="Reset camera view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-.8 6M20 5v5h-5"/></svg><span>Reset view</span></button></div>
           <div id="ai-mascot-loader" class="ai-mascot-loader"><span class="spinner" aria-hidden="true"></span><span>Bringing the twin online…<small>The text interface remains available if WebGL fails.</small></span></div>
         </div>
         <div class="ai-prompt-list" aria-label="Suggested questions">
-          <button type="button" data-ai-prompt="What makes this digital twin technically interesting?">Technical overview</button>
-          <button type="button" data-ai-prompt="How are the mascot animations and speech coordinated?">Animation system</button>
-          <button type="button" data-ai-prompt="Which project best demonstrates Sadeq's quality engineering work?">Quality work</button>
+          <p class="studio-chat-kicker">Start somewhere</p>
+          <div class="studio-prompts">
+            <button type="button" data-ai-prompt="What makes this digital twin technically interesting?">How it works</button>
+            <button type="button" data-ai-prompt="How are the mascot animations and speech coordinated?">Animation</button>
+            <button type="button" data-ai-prompt="Which project best demonstrates Sadeq's quality engineering work?">Quality work</button>
+          </div>
         </div>
-        <div id="ai-chat-log" class="ai-chat-log" aria-live="polite" aria-relevant="additions">
-          <div class="ai-message ai-message-bot">Hey—I'm Sadeq's digital twin. Ask about the animation system, voice interaction, engineering decisions or Sadeq's work.</div>
+        <div id="ai-chat-log" class="ai-chat-log" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions" tabindex="0">
+          <div class="ai-message ai-message-bot">Hey, I’m Sadeq’s AI twin. You can ask about his projects, or how my animation and voice work.</div>
         </div>
         <form id="ai-chat-form" class="ai-chat-form">
           <button id="ai-mic-btn" class="ai-chat-action" type="button" title="Talk instead of typing" aria-label="Start voice input">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.2" y="3.5" width="7.6" height="12" rx="3.8"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7"/></svg>
           </button>
           <label class="sr-only" for="ai-chat-input">Ask Sadeq's digital twin a question</label>
-          <input id="ai-chat-input" type="text" maxlength="1200" autocomplete="off" placeholder="Ask about the system…">
+          <input id="ai-chat-input" type="text" maxlength="1200" autocomplete="off" enterkeyhint="send" placeholder="Ask a question…">
           <button id="ai-send-btn" class="ai-chat-action ai-send-btn" type="submit" title="Send question" aria-label="Send question">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.5 14-2.8-5.2L5 12Z"/><path d="m11.7 13.8 3.6-3.6"/></svg>
           </button>
         </form>
-        <p class="ai-mascot-note">Voice recordings are used only to transcribe the current question. AI answers are restricted to a verified professional profile.</p>
+        <p class="ai-mascot-note">AI replies use a maintained professional profile and can be wrong. Voice recordings are used to transcribe the current question.</p>
       </section>
-
-      <button id="ai-mascot-toggle" class="ai-mascot-toggle" type="button" aria-expanded="false">
-        <img src="assets/studio-preview.png" width="640" height="640" alt="Sadeq's paper-cut-inspired 3D digital character in a cinematic studio">
-        <span class="ai-mascot-toggle__content">
-          <small>Interactive system</small>
-          <strong class="ai-mascot-toggle__label">Launch the digital twin</strong>
-          <span>Load the 3D experience, then ask by voice or text ↗</span>
-        </span>
-      </button>
     </section>
 
-<section class="explainer wrap" id="inside" aria-labelledby="inside-heading"><div class="section-top"><div><p class="eyebrow">Inside the project</p><h2 id="inside-heading">See how Digital Twin answers.</h2></div><p>Follow one question through the app.<br>Then watch how text, voice and movement connect.</p></div><div class="dual-explainers"><section class="explainer-panel" id="panel-map" aria-labelledby="map"><div class="tool-heading"><h3 id="map" tabindex="-1">System map</h3><a href="explainers/system-map.html" target="_blank" rel="noopener">Full-size map ↗</a></div><p class="panel-note">Select a box to understand its part in the reply. Code links are there if you want the detail.</p><iframe id="system-map" src="explainers/system-map.html?embed=1&amp;layout=compact" title="Digital Twin architecture with pinned source links" height="540" referrerpolicy="no-referrer"></iframe></section><section class="explainer-panel" id="panel-guide" aria-labelledby="guide"><div class="tool-heading"><h3 id="guide" tabindex="-1">Animated guide</h3><a href="explainers/guide.html?view=guide" target="_blank" rel="noopener">Full-size guide ↗</a></div><p class="panel-note">The card is your question. Its stop represents my work profile; the puppet is the optional 3D character and the tray is the text reply.<span class="guide-loop-note">Repeats automatically while in view. Pause to hold a moment.</span></p><iframe id="animated-guide" data-src="explainers/guide.html?view=guide&amp;layout=compact" title="Interactive reply theatre: text, simulated performance and fallbacks" height="540" referrerpolicy="no-referrer"></iframe><noscript><p><a href="explainers/guide.html?view=guide">Open the complete guide →</a></p></noscript></section></div><p class="dual-note">The animation explains the software with a miniature theatre. It does not use your microphone or contact the assistant. Open either view for more room.</p></section>
-
-    <section class="evidence" id="evidence">
-      <div class="section-heading">
-        <p class="eyebrow">Engineering evidence</p>
-        <h2>More than a character model.</h2>
-        <p>The work is the orchestration: animation, speech, interaction, rendering and failure recovery operating as one coherent browser system.</p>
-      </div>
-      <div class="evidence-grid">
-        <article><span>01</span><h3>Continuous motion</h3><p>Speaking, idle, listening and thinking movements transition through overlapping blends instead of pausing between poses.</p></article>
-        <article><span>02</span><h3>Speech coordination</h3><p>Generated or browser speech drives viseme targets and body-performance timing while protecting the first spoken words with audio readiness checks.</p></article>
-        <article><span>03</span><h3>Controlled AI context</h3><p>Answers are grounded in a maintained professional source of truth rather than pretending to know unrestricted personal information.</p></article>
-        <article><span>04</span><h3>Resilient delivery</h3><p>Text remains usable when WebGL, microphone access, speech recognition, transcription or generated audio is unavailable.</p></article>
-      </div>
-    </section>
-
-    <section class="art-direction" id="art-direction">
-      <div class="art-direction__visual">
-        <img src="assets/portfolio-twin-card.webp" width="1200" height="675" loading="lazy" decoding="async" alt="Paper-cut-inspired digital twin in an aqua and amber architectural studio">
-      </div>
-      <div class="art-direction__copy">
-        <p class="eyebrow">Visual direction</p>
-        <h2>Paper texture, not plastic futurism.</h2>
-        <p>The character deliberately avoids the generic metaverse-avatar look. Layered paper materials, an architectural studio, dimensional shadows and controlled aqua-and-amber light connect the 3D experience to Sadeq's wider editorial portfolio identity.</p>
-        <dl>
-          <div><dt>Material</dt><dd>Layered paper-cut surface</dd></div>
-          <div><dt>Environment</dt><dd>Purpose-built studio set</dd></div>
-          <div><dt>Camera</dt><dd>Human eye-level portrait framing</dd></div>
-          <div><dt>Signal</dt><dd>Aqua system state · amber detail</dd></div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="architecture" id="architecture">
-      <div class="section-heading">
-        <p class="eyebrow">System architecture</p>
-        <h2>Technical workflow: from input to animation.</h2>
-      </div>
-      <ol class="system-route">
-        <li><b>01</b><span>User input</span><small>Text or microphone</small></li>
-        <li><b>02</b><span>Transcription</span><small>Browser or server fallback</small></li>
-        <li><b>03</b><span>Grounded response</span><small>Controlled professional context</small></li>
-        <li><b>04</b><span>Speech analysis</span><small>Audio energy + transcript timing</small></li>
-        <li><b>05</b><span>3D performance</span><small>Visemes + blended gestures</small></li>
-      </ol>
-      <div class="stack-line"><span>Three.js</span><span>WebGL</span><span>GLTF</span><span>Web Speech</span><span>MediaRecorder</span><span>Gemini</span><span>Netlify Functions</span></div>
-    </section>
-<section id="integration-notes" aria-label="Contribution, implementation and limits"><section class="case-contribution wrap" aria-labelledby="contribution-heading"><div><p class="eyebrow">My contribution</p><h2 id="contribution-heading">Animation, speech<br><span class="serif">and text that stays usable.</span></h2></div><div><p>I integrated Three.js rendering, responsive camera behaviour, authored animation states, speech playback and audio/transcript-driven facial targets. I blended gestures so the character does not jump straight between unrelated poses.</p><p>The assistant uses a maintained professional source of truth. Browser recognition and recorded-audio transcription offer different input paths, while the readable chat survives optional model or WebGL failure. The 3D model loads only when the viewer is requested.</p></div></section>
-<section class="case-evidence wrap" aria-labelledby="evidence-heading"><h2 id="evidence-heading">What you can inspect.</h2><div class="evidence-notes"><article><h3>Implementation</h3><ul><li>Three.js rendering, GLB animation and morph targets.</li><li>Blended authored gestures and approximate mouth cues.</li><li>Typed questions, browser speech and recording fallback.</li><li>Server-side chat and transcription functions.</li></ul></article><article><h3>Authorship and assets</h3><p>Engineering, state orchestration and integration are documented separately from adapted animation resources and AI-assisted visual references. The source-code MIT licence does not grant reuse of the character likeness, model or identity artwork.</p><a href="https://github.com/Rammeshgar/digital-twin-demo/blob/cc7771f05781b55bb07f43954b5b96fe687444d7/ASSET_NOTES.md" target="_blank" rel="noopener noreferrer">Read the asset provenance ↗</a></article></div></section>
-<section class="boundaries wrap" aria-labelledby="limits-heading"><h2 id="limits-heading">What this does—and doesn’t—show.</h2><p>The character is not a person and AI replies are not Sadeq speaking personally. Answers can be incorrect. Controlled context narrows the subject; it cannot guarantee truth. Mouth movement is approximate, not phoneme-perfect lip sync.</p><p>Microphone and speech features vary by browser and permission state. In the actual app, recordings are used to transcribe the current question; provider processing is remote. These teaching views make no microphone, recording, model-loading or provider request.</p><p>The map is a reviewed overview of source revision <code>cc7771f</code>, not a continuously updated dependency graph.</p></section></section>
+    <noscript><p class="studio-noscript">The interactive studio needs JavaScript. You can still <a href="/digital-twin/">read the Digital Twin case study</a> or <a href="/">explore the portfolio</a>.</p></noscript>
   </main>
 
-  <footer><span>Sadeq Rezai · Budapest</span><a href="https://github.com/Rammeshgar">GitHub ↗</a><a href="https://www.linkedin.com/in/sadeqrezai">LinkedIn ↗</a></footer>
-  <script type="module" src="mascot.js?v=paper-mobile-detail-1"></script>
+  <footer><span>Sadeq Rezai · Budapest</span><a href="/digital-twin/">Digital Twin case study ↗</a><a href="https://github.com/Rammeshgar">GitHub ↗</a><a href="https://www.linkedin.com/in/sadeqrezai">LinkedIn ↗</a></footer>
+  <script type="module" src="mascot.js?v=studio-v2"></script>
+  <script type="module" src="studio-sound.mjs"></script>
 </body>
 </html>

@@ -2,15 +2,27 @@
 
 A browser-based digital twin that combines authored character animation, continuous gesture blending, speech-driven lip movement, controlled AI context, microphone input, and resilient web fallbacks.
 
-![Digital twin studio preview](assets/studio-preview.png)
+![Digital twin studio preview](assets/studio-v2-preview.webp)
 
 The visual system uses a paper-cut-inspired character treatment rather than a generic glossy avatar: layered fiber texture, an architectural studio, dimensional shadows, and controlled aqua-and-amber lighting connect it to the wider portfolio identity.
+
+[Open the assistant](https://rammeshgar.github.io/digital-twin-demo/) · [Read the Digital Twin case study](https://rammeshgar.github.io/digital-twin/) · [Portfolio](https://rammeshgar.github.io/)
 
 ## Why this project exists
 
 Most portfolio chatbots are detached widgets. This project explores a more coherent interface: the character's body performance, mouth movement, voice, camera and conversation state respond as one system.
 
 The goal is not to simulate a human. It is to make a technical portfolio easier to explore while keeping the information grounded in a maintained professional profile.
+
+## Studio experience
+
+The second-generation interface puts the conversation and character in one workspace. The character and approved paper-cut identity are unchanged; the presentation uses a more deliberate architectural set, portrait framing and a restrained copper-and-aqua lighting palette.
+
+The portfolio's [Digital Twin case study](https://rammeshgar.github.io/digital-twin/) is the single technical presentation, with its system map, animated explanation, design and limitations. This repository's [standalone assistant](https://rammeshgar.github.io/digital-twin-demo/) remains a direct, shareable app. Old case-study anchors forward to the matching portfolio sections, and the original explainer files remain accessible for existing links.
+
+The same assistant also opens directly from the portfolio homepage and technical case study, as an on-demand same-origin frame (`?embed=assistant`). The host mounts the frame only after a user activates the launcher; it renders just the studio panel, inherits the portfolio theme, and does not record a second pageview. Closing it stops speech, microphone capture and the renderer before the host removes the frame. Text remains available if 3D rendering or voice fails. The standalone app still has its own launch control.
+
+Interface sounds are separate from the AI voice and are off by default. The 3D experience still loads only on request, and the text conversation remains available independently of rendering or speech.
 
 ## System capabilities
 
@@ -71,7 +83,7 @@ The runtime does not jump directly between unrelated poses. Exported transition 
 - GLTF/GLB skeletal animation and morph targets
 - Web Speech API
 - MediaRecorder API
-- Gemini through serverless functions
+- Server-side AI and optional speech services, with Netlify as the shared API entry point
 - Netlify Functions
 - Vanilla JavaScript, HTML and CSS
 
@@ -80,10 +92,12 @@ The runtime does not jump directly between unrelated poses. Exported transition 
 The model and JavaScript modules require an HTTP server; opening `index.html` directly will not work reliably.
 
 ```bash
-npx serve .
+npm run preview
 ```
 
-Then open the local URL shown in the terminal.
+Then open the local URL shown in the terminal. This dependency-free preview serves the same `/digital-twin-demo/` path as GitHub Pages, with analytics omitted. It does not replace the deployed AI service or make requests to it until a conversation is requested.
+
+For a mock-only browser check of the standalone routes, embedded handshake, phone and desktop layout, theme, and cleanup, run `node tools/check-embedded-studio.mjs` with Playwright installed. The script intercepts network requests and replaces microphone access, so it does not contact the AI or speech provider.
 
 ## Rebuild the optimized web model
 
@@ -96,7 +110,7 @@ npx @gltf-transform/cli optimize prepared.glb assets/sadeq-digital-twin.meshopt.
 
 Validate the animation names and morph targets after every rebuild before replacing the published asset.
 
-The public demo currently uses the deployed portfolio API. To run your own AI and transcription backend, deploy the included Netlify functions and change the two API constants in `mascot.js`.
+The public assistant uses the same deployed portfolio API for chat and transcription. The shared [backend repository](https://github.com/Rammeshgar/mascot-backend) owns the production conversation service. The files bundled under `netlify/functions/` document a compatible implementation and its persona/knowledge inputs; editing a frontend repository copy alone does not update the deployed conversation service. To run your own backend, deploy your server-side functions and change the two API constants in `mascot.js`. Keep credentials off the frontend.
 
 ## Environment variables
 
@@ -108,6 +122,8 @@ Refer to the function source for the currently supported environment-variable na
 
 - Texture preparation and Meshopt compression reduce the web GLB from 22.6 MB to approximately 4.1 MB while preserving the original paper-cut character, rig and morph targets. The runtime adds an 18-clip movement library without replacing the approved model.
 - The 3D model loads only when the interactive viewer opens.
+- Three.js 0.167.1 and the required loader, controls, decoder and geometry utilities are served locally, preserving the exact original library version while avoiding a third-party CDN dependency. Their MIT license is included in `vendor/three/LICENSE`.
+- Portfolio typefaces are served locally. The launch preview is a compressed capture of the live 3D studio rather than separate artwork.
 - Mobile rendering uses a lower pixel ratio and disables expensive shadows.
 - Renderer resizing is observed instead of continuously polling layout.
 - Mouth shapes are smoothed to avoid visual chatter.
@@ -129,7 +145,7 @@ See [ASSET_NOTES.md](ASSET_NOTES.md) for the distinction between authored engine
 
 ## Author
 
-**Sadeq Rezai** — Configuration Consultant working across quality engineering, automated validation, data, web systems and practical AI.
+**Sadeq Rezai** — Technology implementation & automation specialist working across software configuration, automated validation, data tools and AI-assisted workflows.
 
 - [Engineering portfolio](https://rammeshgar.github.io)
 - [LinkedIn](https://www.linkedin.com/in/sadeqrezai)

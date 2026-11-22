@@ -11,12 +11,15 @@ This repository separates implementation code from character and identity assets
 - Browser speech-recognition and MediaRecorder fallbacks
 - AI chat integration and controlled professional context
 - Responsive interface, accessibility states and failure handling
+- Runtime studio constructed from Three.js geometry, locally generated paper texture, lighting, and conversation-state camera/gaze orchestration
 
 ## Character and animation production
 
 The character was developed as a personalized digital representation using Blender-based production, AI-assisted visual references and adapted rig/animation resources. Mixamo-derived motion may be present in the authored animation source.
 
 The web GLB includes substantial transformation and integration work: material direction, studio environment, camera presentation, lighting, facial targets, animation trimming, pose differentiation, transition baking and web export.
+
+The second-generation runtime uses the same approved character asset and a code-built architectural studio. Its likeness, rig, authored movement and facial targets are not replaced by the studio redesign.
 
 ## License boundary
 

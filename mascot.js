@@ -4,6 +4,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { createMovement } from './movement.mjs';
 import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs?v=lip-sync-restored';
+import { createStudioSet } from './studio-scene.mjs';
+
+const embeddedAssistant = document.documentElement.dataset.twinEmbed === 'assistant';
+const parentOrigin = embeddedAssistant ? location.origin : null;
 
 const ui = {
     toggle: document.getElementById("ai-mascot-toggle"),
@@ -12,6 +16,7 @@ const ui = {
     close: document.getElementById("ai-mascot-close"),
     voiceToggle: document.getElementById("ai-mascot-voice-toggle"),
     expand: document.getElementById("ai-mascot-expand"),
+    resetView: document.getElementById("ai-mascot-reset-view"),
     status: document.getElementById("ai-mascot-status"),
     stage: document.getElementById("ai-mascot-stage"),
     loader: document.getElementById("ai-mascot-loader"),
@@ -23,6 +28,7 @@ const ui = {
 };
 
 const state = {
+    disposed: false,
     loaded: false,
     loading: false,
     busy: false,
@@ -31,6 +37,10 @@ const state = {
     recognitionStarting: false,
     recognitionSubmitted: false,
     recognitionError: "",
+    microphoneGeneration: 0,
+    recognitionGeneration: null,
+    chatAbortController: null,
+    transcriptionAbortController: null,
     recorderSupported: false,
     forceRecorderFallback: false,
     mediaRecorder: null,
@@ -50,7 +60,8 @@ const state = {
     currentAudioUrl: null,
     transcriptTimeline: [],
     mouthEnergy: 0,
-    expanded: false,
+    expanded: ui.panel.classList.contains("is-expanded"),
+    renderError: false,
     currentSpeechText: "",
     hasStartedPerformance: false,
     currentTalkGesture: 0,
@@ -77,13 +88,21 @@ let audioSamples;
 const animationActions = new Map();
 let activeBodyAction;
 let cameraTransition;
-let portraitView;
-let studioView;
+let characterFrame;
+let manualView = false;
+let cameraDragging = false;
+let lastStudioMode;
+let studioSet;
+let reducedPose;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const initialLoaderMarkup = ui.loader.innerHTML;
 const lipSyncMeshes = [];
 const clock = new THREE.Clock();
 const targetVisemes = new Map();
 const smoothedMouse = new THREE.Vector2();
 const targetMouse = new THREE.Vector2();
+const desiredGaze = new THREE.Vector2();
+let pointerInsideStage = false;
 const animatedHeadQuaternion = new THREE.Quaternion();
 const animatedNeckQuaternion = new THREE.Quaternion();
 const lookQuaternion = new THREE.Quaternion();
@@ -109,15 +128,15 @@ function applyPapercutFinish(mesh) {
     const isHair = /^hair/i.test(mesh.name);
     const paperStrength = isSkin ? 0.19 : isBody ? 0.23 : 0.17;
     const paletteTreatment = isSkin
-        ? `diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.16, 0.82, 0.66), 0.48);
-           diffuseColor.rgb += vec3(0.018, 0.006, 0.0);`
+        ? `diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.07, 0.97, 0.89), 0.48);
+           diffuseColor.rgb += vec3(0.010, 0.005, 0.0);`
         : isBody
             ? `float ivoryMask = smoothstep(0.52, 0.88, paperLuma);
-               vec3 midnightCloth = diffuseColor.rgb * vec3(0.72, 0.91, 1.08);
-               vec3 warmIvory = diffuseColor.rgb * vec3(1.16, 0.82, 0.66);
+               vec3 midnightCloth = diffuseColor.rgb * vec3(0.76, 0.94, 1.02);
+               vec3 warmIvory = diffuseColor.rgb * vec3(1.12, 0.89, 0.75);
                diffuseColor.rgb = mix(midnightCloth, warmIvory, ivoryMask * 0.82);`
             : isHair
-                ? `diffuseColor.rgb *= vec3(0.68, 0.80, 1.0);`
+                ? `diffuseColor.rgb *= vec3(0.84, 0.90, 1.0);`
                 : "";
 
     for (const material of materials) {
@@ -160,13 +179,33 @@ function applyPapercutFinish(mesh) {
                     diffuseColor.rgb *= vec3(1.018, 1.0, 0.965);
                     ${paletteTreatment}`);
         };
-        material.customProgramCacheKey = () => `papercut-v2-${paperStrength}`;
+        // Skin, cloth and hair each compile a different palette treatment.
+        material.customProgramCacheKey = () => `papercut-v3-${isSkin ? 'skin' : isBody ? 'cloth' : isHair ? 'hair' : 'general'}-${paperStrength}`;
         material.needsUpdate = true;
     }
 }
 
 function setStatus(message) {
     ui.status.textContent = message;
+    updateStudioMode();
+}
+
+function getStudioMode() {
+    if (state.renderError) return 'error';
+    if (state.speaking) return 'speaking';
+    if (state.listening || state.recordingStream || state.recognitionStarting) return 'listening';
+    if (state.busy) return 'thinking';
+    return state.loaded ? 'idle' : 'loading';
+}
+
+function updateStudioMode() {
+    const mode = getStudioMode();
+    if (mode === lastStudioMode) return;
+    lastStudioMode = mode;
+    ui.panel.dataset.studioState = mode;
+    if (!manualView && characterFrame && state.loaded && !reducedMotion.matches) {
+        moveCameraForMode(false);
+    }
 }
 
 function addMessage(text, role = "bot", extraClass = "") {
@@ -178,24 +217,109 @@ function addMessage(text, role = "bot", extraClass = "") {
     return message;
 }
 
+function isPanelActive() {
+    return !state.disposed && ui.panel.classList.contains('is-open');
+}
+
+function notifyHost(type) {
+    if (embeddedAssistant && parentOrigin && parentOrigin !== 'null') {
+        window.parent.postMessage({ type }, parentOrigin);
+    }
+}
+
 function openPanel() {
+    if (state.disposed) return;
     ui.panel.classList.add("is-open");
     ui.panel.setAttribute("aria-hidden", "false");
     ui.toggle.setAttribute("aria-expanded", "true");
     document.body.classList.add("ai-open", "ai-available");
-    ui.toggleLabel.textContent = "Close guide";
+    if (ui.toggleLabel) ui.toggleLabel.textContent = "Studio open";
     if (!state.loaded && !state.loading) loadMascot();
-    setTimeout(() => ui.input.focus(), 260);
+    else if (state.loaded) startRenderLoop();
+    requestAnimationFrame(() => {
+        if (!isPanelActive()) return;
+        if (!embeddedAssistant) {
+            const top = document.querySelector('.site-header')?.getBoundingClientRect().bottom || 0;
+            const rect = ui.panel.getBoundingClientRect();
+            if (rect.top < top - 1 || rect.top > top + 56) {
+                ui.panel.scrollIntoView({ block: 'start', behavior: 'instant' });
+            }
+        }
+        // Opening on a phone should not immediately launch its soft keyboard.
+        const focusTarget = matchMedia('(max-width: 760px), (pointer: coarse)').matches ? ui.close : ui.input;
+        focusTarget?.focus({ preventScroll: true });
+    });
 }
 
 function closePanel() {
+    if (embeddedAssistant) {
+        // The host owns its dialog and focus return, so never focus the hidden
+        // standalone launcher inside this iframe.
+        try { disposeAssistant(); }
+        finally { notifyHost('twin-close'); }
+        return;
+    }
     ui.panel.classList.remove("is-open");
     ui.panel.setAttribute("aria-hidden", "true");
     ui.toggle.setAttribute("aria-expanded", "false");
     document.body.classList.remove("ai-open");
-    ui.toggleLabel.textContent = "Ask Sadeq’s AI";
-    stopRecognition(true);
+    if (ui.toggleLabel) ui.toggleLabel.textContent = "Enter the studio";
+    pointerInsideStage = false;
+    targetMouse.set(0, 0);
+    cancelMicrophoneInput();
     stopAllSpeech();
+    stopRenderLoop();
+    // The launcher has just become visible again. Flush its layout and return
+    // focus synchronously in this keyboard/click event, not on a future frame.
+    const launcher = ui.toggle.getBoundingClientRect();
+    ui.toggle.focus({ preventScroll: true });
+    const top = document.querySelector('.site-header')?.getBoundingClientRect().bottom || 0;
+    if (launcher.top < top || launcher.bottom > innerHeight) ui.toggle.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+}
+
+function disposeAssistant() {
+    if (state.disposed) return;
+    state.disposed = true;
+    ui.panel.classList.remove('is-open');
+    ui.panel.setAttribute('aria-hidden', 'true');
+    // In-flight permissions can resolve after a close, so the microphone
+    // generation also invalidates delayed results before they begin capture.
+    const cleanup = (name, operation) => {
+        try { operation(); }
+        catch (error) { console.warn(`Assistant cleanup (${name}) was incomplete.`, error); }
+    };
+    cleanup('microphone', cancelMicrophoneInput);
+    // Always stop the underlying media tracks even if a recognition API call
+    // threw before the higher-level cancellation could finish.
+    cleanup('media tracks', () => state.recordingStream?.getTracks().forEach(track => track.stop()));
+    cleanup('recording monitor', stopRecordingMonitor);
+    cleanup('chat', () => state.chatAbortController?.abort());
+    cleanup('transcription', () => state.transcriptionAbortController?.abort());
+    cleanup('speech', stopAllSpeech);
+    cleanup('speech output', () => window.speechSynthesis?.cancel());
+    cleanup('generated audio', () => state.currentAudio?.pause());
+    cleanup('interface sounds', () => document.dispatchEvent(new Event('twin-dispose')));
+    cleanup('audio context', () => audioContext?.close().catch(() => {}));
+    audioContext = null;
+    cleanup('render loop', stopRenderLoop);
+    cleanup('studio controls', () => controls?.dispose());
+    controls = null;
+    cleanup('resize observer', () => resizeObserver?.disconnect());
+    resizeObserver = null;
+    cleanup('renderer', () => renderer?.dispose());
+    cleanup('canvas', () => renderer?.domElement.remove());
+    renderer = null;
+    state.loaded = false;
+}
+
+if (embeddedAssistant) {
+    window.addEventListener('message', event => {
+        if (event.source !== window.parent || event.origin !== parentOrigin || event.data?.type !== 'twin-dispose') return;
+        try { disposeAssistant(); }
+        finally { notifyHost('twin-disposed'); }
+    });
+    window.addEventListener('pagehide', disposeAssistant, { once: true });
+    document.getElementById('ai-open-standalone')?.addEventListener('click', disposeAssistant);
 }
 
 ui.toggle.addEventListener("click", () => {
@@ -207,15 +331,23 @@ ui.expand?.addEventListener("click", () => {
     state.expanded = !state.expanded;
     ui.panel.classList.toggle("is-expanded", state.expanded);
     ui.expand.setAttribute("aria-pressed", String(state.expanded));
-    ui.expand.setAttribute("aria-label", state.expanded ? "Use compact mascot viewer" : "Expand mascot viewer");
+    ui.expand.setAttribute("aria-label", "Expanded character viewer");
     ui.expand.title = state.expanded ? "Use compact viewer" : "Expand mascot viewer";
     const icon = ui.expand.querySelector("[data-icon]");
     if (icon) icon.dataset.icon = state.expanded ? "compress" : "expand";
+    manualView = false;
     moveCameraForMode();
     requestAnimationFrame(resizeRenderer);
 });
+ui.resetView?.addEventListener('click', () => {
+    manualView = false;
+    moveCameraForMode();
+});
 document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && ui.panel.classList.contains("is-open")) closePanel();
+    if (event.key === "Escape" && ui.panel.classList.contains("is-open")) {
+        event.preventDefault();
+        closePanel();
+    }
 });
 
 document.querySelectorAll("[data-ai-prompt]").forEach((button) => {
@@ -230,7 +362,7 @@ ui.voiceToggle.addEventListener("click", () => {
     const icon = ui.voiceToggle.querySelector("[data-icon]");
     if (icon) icon.dataset.icon = state.voiceEnabled ? "volume" : "muted";
     ui.voiceToggle.title = state.voiceEnabled ? "Mute voice" : "Enable voice";
-    ui.voiceToggle.setAttribute("aria-label", ui.voiceToggle.title);
+    ui.voiceToggle.setAttribute("aria-label", "Voice output");
     ui.voiceToggle.setAttribute("aria-pressed", String(state.voiceEnabled));
     if (!state.voiceEnabled) {
         stopAllSpeech();
@@ -238,83 +370,91 @@ ui.voiceToggle.addEventListener("click", () => {
 });
 
 async function loadMascot() {
+    if (state.disposed) return;
     state.loading = true;
+    state.renderError = false;
+    ui.loader.innerHTML = initialLoaderMarkup;
+    ui.loader.classList.remove('is-hidden');
+    characterFrame = null;
+    cameraTransition = null;
+    manualView = false;
+    cameraDragging = false;
+    reducedPose = null;
+    model = null;
+    headBone = neckBone = null;
+    headLookApplied = neckLookApplied = false;
+    movement = mixer = activeBodyAction = null;
+    lipSyncMeshes.length = 0;
+    animationActions.clear();
     setStatus("Chat ready · loading the 3D mascot");
 
+    try {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    // Start close to the face. Visitors can scroll backward to zoom out.
-    camera.position.set(0, 1.5, 0.96);
+    camera.position.set(0, 1.5, 1.8);
 
-    const compactViewer = window.matchMedia("(max-width: 760px)").matches;
-    renderer = new THREE.WebGLRenderer({ antialias: !compactViewer, alpha: true, powerPreference: compactViewer ? "low-power" : "high-performance" });
-    // Retain facial and hair detail on high-density phones without rendering at full 3x DPR.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    const compactViewer = window.matchMedia("(max-width: 760px)").matches || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+    renderer = new THREE.WebGLRenderer({ antialias: !compactViewer, alpha: false, powerPreference: compactViewer ? "low-power" : "high-performance" });
+    // Retain detail without rendering at full 3x DPR on dense screens.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactViewer ? 1.4 : 1.65));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.06;
+    renderer.toneMappingExposure = 0.94;
     renderer.shadowMap.enabled = !compactViewer;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional digital twin');
+    renderer.domElement.setAttribute('role', 'img');
     ui.stage.appendChild(renderer.domElement);
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 1.5, 0);
-    controls.enableDamping = true;
+    controls.enableDamping = !reducedMotion.matches;
     controls.enablePan = false;
-    controls.minDistance = 0.72;
+    controls.minDistance = 1.0;
     controls.maxDistance = 3.8;
-    controls.zoomSpeed = 0.75;
-    controls.minPolarAngle = Math.PI * 0.2;
-    controls.maxPolarAngle = Math.PI * 0.6;
-
-    scene.add(new THREE.HemisphereLight(0xffead7, 0x101d28, 1.05));
-    const key = new THREE.DirectionalLight(0xffd2a8, 1.58);
-    key.position.set(2.1, 3.5, 4.8);
-    key.castShadow = true;
-    key.shadow.bias = -0.00012;
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0x75e8dc, 1.08);
-    fill.position.set(-2.8, 2.25, 4.1);
-    scene.add(fill);
-    const eyeLight = new THREE.DirectionalLight(0xffead7, 0.62);
-    eyeLight.position.set(0, 2.1, 5.2);
-    scene.add(eyeLight);
-    const rim = new THREE.DirectionalLight(0xffd7b0, 1.25);
-    rim.position.set(-2.5, 3.2, -3.5);
-    scene.add(rim);
-
-    if (!compactViewer) {
-        const ground = new THREE.Mesh(
-            new THREE.CircleGeometry(2.2, 72),
-            new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.26 })
-        );
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = 0.001;
-        ground.receiveShadow = true;
-        scene.add(ground);
-    }
+    controls.zoomSpeed = 0.7;
+    controls.minAzimuthAngle = -Math.PI * 0.21;
+    controls.maxAzimuthAngle = Math.PI * 0.21;
+    controls.minPolarAngle = Math.PI * 0.36;
+    controls.maxPolarAngle = Math.PI * 0.59;
+    controls.addEventListener('start', () => {
+        manualView = true;
+        cameraDragging = true;
+        cameraTransition = null;
+        ui.stage.dataset.cameraMode = 'manual';
+    });
+    controls.addEventListener('end', () => { cameraDragging = false; });
+    studioSet = createStudioSet(scene, compactViewer);
 
     renderer.domElement.addEventListener("pointermove", (event) => {
+        if (event.pointerType === 'touch' || reducedMotion.matches) return;
+        pointerInsideStage = true;
         const rect = renderer.domElement.getBoundingClientRect();
         targetMouse.x = THREE.MathUtils.clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1);
         targetMouse.y = THREE.MathUtils.clamp(((event.clientY - rect.top) / rect.height) * 2 - 1, -1, 1);
     });
-    renderer.domElement.addEventListener("pointerleave", () => targetMouse.set(0, 0));
+    renderer.domElement.addEventListener("pointerleave", () => {
+        pointerInsideStage = false;
+        targetMouse.set(0, 0);
+    });
 
     resizeObserver = new ResizeObserver(resizeRenderer);
     resizeObserver.observe(ui.stage);
     resizeRenderer();
 
-    try {
         const loader = new GLTFLoader();
         loader.setMeshoptDecoder(MeshoptDecoder);
         const gltf = await loader.loadAsync(`${MODEL_URL}?v=${MODEL_ASSET_VERSION}`);
+        if (state.disposed) return;
         model = gltf.scene;
         refineCharacter(model);
         scene.add(model);
 
         model.traverse((child) => {
             if (child.isMesh) {
+                // The preserved authored GLB includes a first-generation studio.
+                // Render the new world-space set instead of stacking the two sets.
+                if (/^Studio_/i.test(child.name)) { child.visible = false; return; }
                 const isGlasses = /glass/i.test(child.name);
                 child.castShadow = !isGlasses;
                 child.receiveShadow = !isGlasses;
@@ -330,12 +470,20 @@ async function loadMascot() {
                 else if (!neckBone && name.includes("neck")) neckBone = child;
             }
         });
+        // These are the actual exported head/neck joints in the current GLB;
+        // naming-based fallback still supports human-named replacement rigs.
+        const rigHead = model.getObjectByName('bone_51');
+        const rigNeck = model.getObjectByName('bone_50');
+        if (!headBone && rigHead?.isBone) headBone = rigHead;
+        if (!neckBone && rigNeck?.isBone) neckBone = rigNeck;
         const visibleHead = model.getObjectByName('new_head');
         const visibleHeadLipSync = Boolean(visibleHead?.morphTargetDictionary && VISEME_NAMES.every((name) => name in visibleHead.morphTargetDictionary));
 
         frameMascot();
 
-        movement = await createMovement(model);
+        try { movement = await createMovement(model); }
+        catch (error) { console.warn('Authored gesture library unavailable; using embedded clips.', error); }
+        if (state.disposed) return;
         if (!movement && gltf.animations.length) {
             mixer = new THREE.AnimationMixer(model);
             for (const clip of gltf.animations) {
@@ -349,14 +497,30 @@ async function loadMascot() {
             playBodyAnimation(IDLE_ANIMATION, 0.72, false, 0.18);
         }
 
+        // Sample a composed pose and draw it before revealing the studio;
+        // there is no transient rig rest pose during the loading transition.
+        if (movement) movement.update(0.34, state, movementElapsed);
+        else mixer?.update(0.34);
+        renderer.render(scene, camera);
         state.loaded = true;
         state.loading = false;
         ui.loader.classList.add("is-hidden");
         setStatus(visibleHeadLipSync ? "Ready · voice and lip movement online" : "Ready · 3D mascot online");
-        animate();
+        startRenderLoop();
     } catch (error) {
+        if (state.disposed) return;
         state.loading = false;
+        state.renderError = true;
+        state.loaded = false;
+        stopRenderLoop();
+        controls?.dispose();
+        controls = null;
+        resizeObserver?.disconnect();
+        renderer?.domElement.remove();
+        renderer?.dispose();
+        renderer = null;
         ui.loader.innerHTML = '<span class="css-icon css-icon--warning" aria-hidden="true"></span><span>The 3D mascot is unavailable.<small>You can still use the full chat below.</small></span>';
+        ui.loader.classList.remove('is-hidden');
         setStatus("Chat ready · 3D view unavailable");
         console.error("Mascot load error:", error);
     }
@@ -393,45 +557,57 @@ function frameMascot() {
     const bounds = getCharacterBounds();
     const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
-    // Keep the default view intimate, while leaving the shoulders and authored
-    // hand gestures in frame. Visitors can still zoom in or out manually.
-    const portraitTarget = new THREE.Vector3(
-        center.x,
-        bounds.min.y + size.y * 0.81,
-        center.z
-    );
-    const portraitDistance = THREE.MathUtils.clamp(size.y * 0.58, 0.98, 1.25);
-    const portraitPosition = new THREE.Vector3(
-        portraitTarget.x + size.x * 0.035,
-        portraitTarget.y + size.y * 0.015,
-        portraitTarget.z + portraitDistance
-    );
-    // Expanded view is a recruiter-facing environmental portrait: close enough
-    // to read the face, wide enough to preserve hand gestures and the studio.
-    const studioTarget = new THREE.Vector3(center.x, bounds.min.y + size.y * 0.68, center.z);
-    const studioPosition = new THREE.Vector3(
-        studioTarget.x + size.x * 0.08,
-        studioTarget.y + size.y * 0.035,
-        studioTarget.z + size.y * 0.78
-    );
-
-    portraitView = { position: portraitPosition, target: portraitTarget };
-    studioView = { position: studioPosition, target: studioTarget };
-
-    controls.target.copy(portraitTarget);
-    controls.minDistance = portraitDistance * 0.7;
-    controls.maxDistance = Math.max(size.y * 4.0, 7.6);
-    camera.position.copy(portraitPosition);
-    camera.lookAt(portraitTarget);
+    characterFrame = { bounds, size, center };
+    controls.minDistance = size.y * 0.50;
+    controls.maxDistance = size.y * 2.10;
+    const destination = getCameraDestination();
+    controls.target.copy(destination.target);
+    camera.position.copy(destination.position);
+    camera.lookAt(destination.target);
+    ui.stage.dataset.cameraMode = state.expanded ? 'studio' : 'portrait';
+    ui.stage.dataset.motion = reducedMotion.matches ? 'reduced' : 'full';
     controls.update();
 }
 
-function moveCameraForMode() {
-    const destination = state.expanded ? studioView : portraitView;
+// Framing is calculated in world units with the current stage aspect. This
+// prevents the large portrait from cropping hair/shoulders on short screens.
+// State changes are a subtle adjustment, not a new camera angle or animation.
+function getCameraDestination(mode = getStudioMode()) {
+    if (!characterFrame || !camera) return null;
+    const { bounds, size, center } = characterFrame;
+    const aspect = Math.max(camera.aspect, 0.35);
+    // On a phone the portrait takes a deliberately nearer shot; a full waist
+    // composition in a 240px stage makes facial motion unnecessarily tiny.
+    const smallStage = matchMedia('(max-width: 760px)').matches && ui.stage.clientHeight < 390;
+    const faceBias = mode === 'listening' ? 0.023 : mode === 'speaking' ? -0.015 : mode === 'thinking' ? 0.006 : 0;
+    const sideBias = mode === 'thinking' ? -0.042 : mode === 'speaking' ? 0.035 : 0.012;
+    const targetRatio = smallStage ? (state.expanded ? 0.803 : 0.832) : (state.expanded ? 0.776 : 0.815);
+    const verticalRatio = smallStage ? (state.expanded ? 0.545 : 0.495) : (state.expanded ? 0.635 : 0.545);
+    const target = new THREE.Vector3(center.x, bounds.min.y + size.y * (targetRatio + faceBias), center.z);
+    const visibleHeight = Math.max(size.y * verticalRatio, (state.expanded ? 0.96 : 0.80) / aspect);
+    // Listening closes the distance only slightly; speaking breathes room into
+    // the frame for authored body motion. Never move the camera radically.
+    const modeScale = mode === 'listening' ? 0.98 : mode === 'speaking' ? 1.045 : 1;
+    const distance = visibleHeight * modeScale / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    const position = new THREE.Vector3(target.x + size.y * sideBias, target.y + size.y * 0.012, target.z + distance);
+    return { position, target };
+}
+
+function moveCameraForMode(explicit = true) {
+    const destination = getCameraDestination();
     if (!destination || !camera || !controls) return;
+    ui.stage.dataset.cameraMode = state.expanded ? 'studio' : 'portrait';
+    if (reducedMotion.matches) {
+        cameraTransition = null;
+        camera.position.copy(destination.position);
+        controls.target.copy(destination.target);
+        camera.lookAt(controls.target);
+        controls.update();
+        return;
+    }
     cameraTransition = {
         startedAt: performance.now(),
-        duration: 760,
+        duration: explicit ? 760 : 1250,
         fromPosition: camera.position.clone(),
         fromTarget: controls.target.clone(),
         toPosition: destination.position.clone(),
@@ -443,15 +619,47 @@ function resizeRenderer() {
     if (!renderer || !camera) return;
     const width = Math.max(ui.stage.clientWidth, 1);
     const height = Math.max(ui.stage.clientHeight, 1);
+    if (width < 2 || height < 2) return;
     renderer.setSize(width, height, false);
+    const previousAspect = camera.aspect;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    if (characterFrame && !manualView && Math.abs(previousAspect - camera.aspect) > 0.015) {
+        if (state.loaded) moveCameraForMode(false);
+        else {
+            const destination = getCameraDestination();
+            camera.position.copy(destination.position);
+            controls.target.copy(destination.target);
+            controls.update();
+        }
+    }
 }
 
+function startRenderLoop() {
+    if (state.disposed || !state.loaded || !renderer || animationFrameId || document.hidden || !ui.panel.classList.contains('is-open')) return;
+    clock.getDelta();
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+function stopRenderLoop() {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+}
+
+document.addEventListener('visibilitychange', () => document.hidden ? stopRenderLoop() : startRenderLoop());
+reducedMotion.addEventListener?.('change', () => {
+    ui.stage.dataset.motion = reducedMotion.matches ? 'reduced' : 'full';
+    if (controls) controls.enableDamping = !reducedMotion.matches;
+    if (reducedMotion.matches) targetMouse.set(0, 0);
+    if (!manualView) moveCameraForMode();
+});
+
 function animate() {
+    if (!renderer || document.hidden || !ui.panel.classList.contains('is-open')) { stopRenderLoop(); return; }
     animationFrameId = requestAnimationFrame(animate);
     const delta = Math.min(clock.getDelta(), 0.05);
     controls?.update();
+    updateStudioMode();
 
     if (headBone && headLookApplied) {
         headBone.quaternion.copy(animatedHeadQuaternion);
@@ -462,13 +670,25 @@ function animate() {
         neckLookApplied = false;
     }
 
-    movementElapsed+=delta;
-    if(movement)movement.update(delta,state,movementElapsed);
-    else mixer?.update(delta);
+    movementElapsed += delta;
+    // Reduced-motion visitors retain speech-driven performance, but idle and
+    // thinking stay as still poses rather than looping gestural animation.
+    if (!reducedMotion.matches || state.speaking) {
+        if (movement) movement.update(delta, state, movementElapsed);
+        else mixer?.update(delta);
+        reducedPose = null;
+    } else {
+        const mode = getStudioMode();
+        if (mode !== reducedPose) {
+            if (movement) movement.update(0.34, state, movementElapsed);
+            else mixer?.update(0.34);
+            reducedPose = mode;
+        }
+    }
 
     if (cameraTransition) {
         const progress = THREE.MathUtils.clamp((performance.now() - cameraTransition.startedAt) / cameraTransition.duration, 0, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
+        const eased = progress * progress * (3 - 2 * progress);
         camera.position.lerpVectors(cameraTransition.fromPosition, cameraTransition.toPosition, eased);
         controls.target.lerpVectors(cameraTransition.fromTarget, cameraTransition.toTarget, eased);
         camera.lookAt(controls.target);
@@ -478,18 +698,30 @@ function animate() {
         }
     }
 
-    const alpha = 1 - Math.exp(-4.5 * delta);
-    smoothedMouse.lerp(targetMouse, alpha);
+    const alpha = 1 - Math.exp(-3.2 * delta);
+    if (reducedMotion.matches) {
+        smoothedMouse.set(0, 0);
+    } else {
+        // A very small, additive head/neck look over the authored body poses.
+        // Speaking favours the listener; thinking briefly looks off-centre;
+        // listening becomes attentive. The visitor can still attract the gaze.
+        if (state.speaking) desiredGaze.set(Math.sin(movementElapsed * 0.51) * 0.075, 0);
+        else if (state.busy) desiredGaze.set(-0.26 + Math.sin(movementElapsed * 0.36) * 0.05, -0.13);
+        else if (state.listening || state.recordingStream || state.recognitionStarting) desiredGaze.set(0, 0.12);
+        else desiredGaze.set(Math.sin(movementElapsed * 0.31) * 0.16, Math.sin(movementElapsed * 0.42 + 1.8) * 0.09);
+        if (pointerInsideStage && !cameraDragging) desiredGaze.lerp(targetMouse, state.speaking ? 0.28 : state.busy ? 0.35 : 0.72);
+        smoothedMouse.lerp(desiredGaze, alpha);
+    }
     if (headBone) {
         animatedHeadQuaternion.copy(headBone.quaternion);
-        lookEuler.set(smoothedMouse.y * THREE.MathUtils.degToRad(8), smoothedMouse.x * THREE.MathUtils.degToRad(15), 0, "YXZ");
+        lookEuler.set(smoothedMouse.y * THREE.MathUtils.degToRad(5), smoothedMouse.x * THREE.MathUtils.degToRad(9), 0, "YXZ");
         lookQuaternion.setFromEuler(lookEuler);
         headBone.quaternion.copy(animatedHeadQuaternion).multiply(lookQuaternion);
         headLookApplied = true;
     }
     if (neckBone) {
         animatedNeckQuaternion.copy(neckBone.quaternion);
-        lookEuler.set(smoothedMouse.y * THREE.MathUtils.degToRad(3), smoothedMouse.x * THREE.MathUtils.degToRad(5), 0, "YXZ");
+        lookEuler.set(smoothedMouse.y * THREE.MathUtils.degToRad(2), smoothedMouse.x * THREE.MathUtils.degToRad(4), 0, "YXZ");
         lookQuaternion.setFromEuler(lookEuler);
         neckBone.quaternion.copy(animatedNeckQuaternion).multiply(lookQuaternion);
         neckLookApplied = true;
@@ -497,7 +729,12 @@ function animate() {
 
     updateGeneratedSpeechViseme();
     updateVisemes();
-    updateNaturalBlink(delta,matchMedia('(prefers-reduced-motion: reduce)').matches);
+    updateNaturalBlink(delta,reducedMotion.matches);
+    // Signal intensity is a real state indication; no decorative flashing.
+    if (studioSet?.signal) {
+        const targetIntensity = state.listening || state.recordingStream ? 0.95 : state.speaking ? 0.75 : 0.48;
+        studioSet.signal.emissiveIntensity = reducedMotion.matches ? targetIntensity : THREE.MathUtils.lerp(studioSet.signal.emissiveIntensity, targetIntensity, 1 - Math.exp(-3 * delta));
+    }
     renderer.render(scene, camera);
 }
 
@@ -777,11 +1014,12 @@ function setBusy(value) {
     ui.input.disabled = value;
     ui.send.disabled = value;
     ui.mic.disabled = value || (!state.recognition && !state.recorderSupported);
+    updateStudioMode();
 }
 
 async function askGemini(message) {
     const cleanMessage = String(message || "").trim();
-    if (!cleanMessage || state.busy) return;
+    if (!cleanMessage || state.busy || !isPanelActive()) return;
 
     stopAllSpeech();
     addMessage(cleanMessage, "user");
@@ -789,6 +1027,8 @@ async function askGemini(message) {
     setBusy(true);
     setStatus("Thinking…");
     const thinking = addMessage("Thinking…", "bot", "ai-message-thinking");
+    const requestController = new AbortController();
+    state.chatAbortController = requestController;
 
     try {
         const API_URL = "https://test-rammeshgar-webpage.netlify.app/api/chat";
@@ -796,12 +1036,14 @@ async function askGemini(message) {
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal: requestController.signal,
             body: JSON.stringify({
                 message: cleanMessage,
                 previousInteractionId: state.previousInteractionId,
             }),
         });
         const data = await response.json().catch(() => ({}));
+        if (state.disposed) return;
         if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
 
         thinking.remove();
@@ -809,20 +1051,25 @@ async function askGemini(message) {
         state.previousInteractionId = data.interactionId || null;
         setStatus("Ready");
 
-        if (state.voiceEnabled) {
+        if (state.voiceEnabled && ui.panel.classList.contains('is-open')) {
             const played = data.audioBase64
                 ? await playGeneratedAudio(data.audioBase64, data.audioMimeType || "audio/mpeg", data.answer)
                 : false;
-            if (!played) speak(data.answer);
+            if (!played && ui.panel.classList.contains('is-open')) speak(data.answer);
         }
     } catch (error) {
         thinking.remove();
+        if (state.disposed || requestController.signal.aborted) return;
         addMessage(error.message || "The AI could not answer.", "bot", "ai-message-error");
         setStatus("Connection error");
         console.error("AI request failed:", error);
     } finally {
-        setBusy(false);
-        ui.input.focus();
+        if (state.chatAbortController === requestController) state.chatAbortController = null;
+        if (!state.disposed) setBusy(false);
+        // Never reopen the mobile keyboard or jump the page when a reply arrives.
+        if (ui.panel.classList.contains('is-open') && !matchMedia('(max-width: 760px), (pointer: coarse)').matches) {
+            ui.input.focus({ preventScroll: true });
+        }
     }
 }
 
@@ -852,6 +1099,10 @@ function setupSpeechRecognition() {
     recognition.interimResults = true;
 
     recognition.onstart = () => {
+        if (!isPanelActive() || state.recognitionGeneration !== state.microphoneGeneration) {
+            try { recognition.abort(); } catch (_) { /* already stopped */ }
+            return;
+        }
         state.listening = true;
         state.recognitionStarting = false;
         state.recognitionSubmitted = false;
@@ -863,9 +1114,10 @@ function setupSpeechRecognition() {
         setStatus("Listening…");
         window.portfolioMusic?.pauseForVoice?.();
     };
-    recognition.onaudiostart = () => setStatus("Microphone active · listening…");
-    recognition.onspeechstart = () => setStatus("Speech detected · keep talking…");
+    recognition.onaudiostart = () => { if (isPanelActive()) setStatus("Microphone active · listening…"); };
+    recognition.onspeechstart = () => { if (isPanelActive()) setStatus("Speech detected · keep talking…"); };
     recognition.onresult = (event) => {
+        if (!isPanelActive() || state.recognitionGeneration !== state.microphoneGeneration) return;
         let transcript = "";
         let hasFinalResult = false;
         for (let i = 0; i < event.results.length; i++) {
@@ -879,6 +1131,7 @@ function setupSpeechRecognition() {
         }
     };
     recognition.onerror = (event) => {
+        if (!isPanelActive() || state.recognitionGeneration !== state.microphoneGeneration) return;
         const messages = {
             "not-allowed": "Microphone blocked · allow access in the address bar and retry",
             "service-not-allowed": "Voice recognition is blocked by this browser",
@@ -892,6 +1145,8 @@ function setupSpeechRecognition() {
         setStatus(state.recognitionError);
     };
     recognition.onend = () => {
+        if (!isPanelActive() || state.recognitionGeneration !== state.microphoneGeneration) return;
+        state.recognitionGeneration = null;
         state.listening = false;
         state.recognitionStarting = false;
         ui.mic.classList.remove("is-listening");
@@ -921,6 +1176,35 @@ function stopRecognition(discard = false) {
     } catch (_) { /* already stopped */ }
 }
 
+function cancelMicrophoneInput() {
+    // Release captured tracks immediately, even if an asynchronous recorder
+    // callback has not fired. Ignore pending permission results and transcripts.
+    state.microphoneGeneration += 1;
+    state.recognitionGeneration = null;
+    state.recognitionSubmitted = true;
+    state.recognitionStarting = false;
+    state.listening = false;
+    state.discardRecording = true;
+    try { state.recognition?.abort(); } catch (_) { /* already stopped */ }
+    const recorder = state.mediaRecorder;
+    if (recorder) {
+        recorder.onstop = recorder.ondataavailable = recorder.onerror = null;
+        try { if (recorder.state !== 'inactive') recorder.stop(); } catch (_) { /* already stopped */ }
+    }
+    state.mediaRecorder = null;
+    state.recordingStream?.getTracks().forEach(track => track.stop());
+    state.recordingStream = null;
+    state.recordingChunks = [];
+    window.clearTimeout(state.recordingTimer);
+    state.recordingTimer = null;
+    stopRecordingMonitor();
+    state.transcriptionAbortController?.abort();
+    ui.mic.classList.remove('is-listening');
+    ui.mic.disabled = state.busy || (!state.recognition && !state.recorderSupported);
+    ui.mic.title = 'Talk instead of typing';
+    ui.mic.setAttribute('aria-label', 'Start voice input — talk instead of typing');
+}
+
 async function requestMicrophoneAccess() {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone capture is unavailable");
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -941,7 +1225,7 @@ function blobToBase64(blob) {
     });
 }
 
-async function finishRecordedQuestion(blob) {
+async function finishRecordedQuestion(blob, microphoneGeneration) {
     stopRecordingMonitor();
     state.mediaRecorder = null;
     state.recordingStream?.getTracks().forEach((track) => track.stop());
@@ -952,7 +1236,7 @@ async function finishRecordedQuestion(blob) {
     ui.mic.setAttribute("aria-label", "Start voice input — talk instead of typing");
     window.portfolioMusic?.resumeAfterVoice?.();
 
-    if (state.discardRecording) {
+    if (state.discardRecording || !isPanelActive() || microphoneGeneration !== state.microphoneGeneration) {
         state.discardRecording = false;
         if (!state.busy) setStatus("Ready");
         ui.mic.disabled = state.busy;
@@ -968,17 +1252,22 @@ async function finishRecordedQuestion(blob) {
 
     setBusy(true);
     setStatus("Transcribing your question…");
+    const requestController = new AbortController();
+    state.transcriptionAbortController = requestController;
     try {
         const audioBase64 = await blobToBase64(blob);
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration || requestController.signal.aborted) return;
         const response = await fetch(TRANSCRIBE_API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal: requestController.signal,
             body: JSON.stringify({
                 audioBase64,
                 mimeType: blob.type || "audio/webm",
             }),
         });
         const data = await response.json().catch(() => ({}));
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration || requestController.signal.aborted) return;
         if (!response.ok) throw new Error(data.error || `Transcription failed (${response.status})`);
         const transcript = String(data.transcript || "").trim();
         if (!transcript) throw new Error("No speech was detected");
@@ -987,8 +1276,12 @@ async function finishRecordedQuestion(blob) {
         await askGemini(transcript);
     } catch (error) {
         setBusy(false);
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration || requestController.signal.aborted) return;
         state.recognitionError = error.message || "Couldn’t transcribe the recording";
         setStatus(state.recognitionError);
+    } finally {
+        if (state.transcriptionAbortController === requestController) state.transcriptionAbortController = null;
+        if (!state.disposed && requestController.signal.aborted) setBusy(false);
     }
 }
 
@@ -1058,6 +1351,7 @@ function startRecordingMonitor(stream) {
 }
 
 async function startMediaRecorder() {
+    const microphoneGeneration = ++state.microphoneGeneration;
     state.recognitionStarting = true;
     state.recognitionError = "";
     state.discardRecording = false;
@@ -1071,6 +1365,10 @@ async function startMediaRecorder() {
                 autoGainControl: true,
             },
         });
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration) {
+            stream.getTracks().forEach(track => track.stop());
+            return;
+        }
         const mimeType = preferredRecordingMimeType();
         const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
         state.recordingStream = stream;
@@ -1085,7 +1383,7 @@ async function startMediaRecorder() {
         };
         recorder.onstop = () => {
             const blob = new Blob(state.recordingChunks, { type: recorder.mimeType || "audio/webm" });
-            finishRecordedQuestion(blob);
+            finishRecordedQuestion(blob, microphoneGeneration);
         };
         recorder.start(250);
         startRecordingMonitor(stream);
@@ -1098,6 +1396,7 @@ async function startMediaRecorder() {
         window.portfolioMusic?.pauseForVoice?.();
         state.recordingTimer = window.setTimeout(() => stopMediaRecorder(false), 15000);
     } catch (error) {
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration) return;
         state.recognitionStarting = false;
         state.recordingStream?.getTracks().forEach((track) => track.stop());
         state.recordingStream = null;
@@ -1113,7 +1412,7 @@ async function startMediaRecorder() {
 }
 
 ui.mic.addEventListener("click", async () => {
-    if (state.busy || state.recognitionStarting) return;
+    if (!isPanelActive() || state.busy || state.recognitionStarting) return;
     if (state.mediaRecorder?.state === "recording") {
         stopMediaRecorder(false);
         return;
@@ -1134,14 +1433,18 @@ ui.mic.addEventListener("click", async () => {
         return;
     }
     state.recognitionStarting = true;
+    const microphoneGeneration = ++state.microphoneGeneration;
+    state.recognitionGeneration = microphoneGeneration;
     state.recognitionSubmitted = false;
     state.recognitionError = "";
     ui.mic.disabled = true;
     setStatus("Checking microphone access…");
     try {
         await requestMicrophoneAccess();
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration) return;
         state.recognition.start();
     } catch (error) {
+        if (!isPanelActive() || microphoneGeneration !== state.microphoneGeneration) return;
         state.recognitionStarting = false;
         ui.mic.disabled = false;
         const blocked = error?.name === "NotAllowedError" || error?.name === "SecurityError";
@@ -1156,3 +1459,13 @@ ui.mic.addEventListener("click", async () => {
 
 setupSpeechRecognition();
 window.speechSynthesis?.getVoices();
+
+if (embeddedAssistant) {
+    // The iframe itself is created only after the user's launch action. Give
+    // the host an explicit ready acknowledgement once the real panel is open;
+    // loading the 3D model doesn't prevent immediate access to text.
+    openPanel();
+    requestAnimationFrame(() => {
+        if (isPanelActive()) notifyHost('twin-ready');
+    });
+}

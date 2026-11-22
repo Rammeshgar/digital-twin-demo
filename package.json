@@ -5,7 +5,8 @@
   "description": "Interactive Three.js digital twin with animation blending, voice, lip movement and controlled AI context.",
   "scripts": {
     "dev": "npx serve .",
-    "check": "node --check mascot.js"
+    "preview": "node tools/preview-studio.mjs",
+    "check": "node --check studio-entry.js && node --check mascot.js && node --check studio-scene.mjs && node --check studio-sound.mjs && node --check tools/preview-studio.mjs && node --check tools/check-embedded-studio.mjs"
   },
   "type": "module",
   "engines": {
