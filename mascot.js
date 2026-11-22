@@ -310,8 +310,14 @@ function disposeAssistant() {
     controls = null;
     cleanup('resize observer', () => resizeObserver?.disconnect());
     resizeObserver = null;
-    cleanup('renderer', () => renderer?.dispose());
-    cleanup('canvas', () => renderer?.domElement.remove());
+    // The embedded viewer is always removed by its host. Let the browser
+    // release its WebGL context with the iframe instead of synchronously
+    // disposing a large renderer on the same main thread as the host dialog.
+    // Speech, tracks, requests, observers and the render loop are already stopped.
+    if (!embeddedAssistant) {
+        cleanup('renderer', () => renderer?.dispose());
+        cleanup('canvas', () => renderer?.domElement.remove());
+    }
     renderer = null;
     state.loaded = false;
 }
