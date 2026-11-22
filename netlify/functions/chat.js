@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 
 /* -------------------------------------------------------------------------- */
@@ -15,13 +16,14 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const geminiApiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
+    process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY ||
     "";
 
 const geminiModel =
-    process.env.GEMINI_MODEL ||
+    process.env.GEMINI_CHAT_MODEL || process.env.GEMINI_MODEL ||
     "gemini-3.6-flash";
+
+const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 const elevenLabsApiKey =
     process.env.ELEVENLABS_API_KEY ||
@@ -34,13 +36,12 @@ const elevenLabsVoiceId =
 const elevenLabsModel =
     process.env.ELEVENLABS_MODEL ||
     process.env.ELEVENLABS_MODEL_ID ||
-    "eleven_flash_v2_5";
+    "";
 
-const ai = geminiApiKey
-    ? new GoogleGenAI({ apiKey: geminiApiKey })
-    : null;
+
 
 let cachedSystemInstruction = null;
+let cachedProfileRevision = null;
 
 /* -------------------------------------------------------------------------- */
 /* Response and CORS helpers                                                   */
@@ -113,6 +114,19 @@ function readRequiredTextFile(filename) {
     );
 }
 
+// A fingerprint of the two public, bundled knowledge documents. It allows a
+// deployment check through the existing OPTIONS route with no AI request.
+function getProfileRevision() {
+    if (!cachedProfileRevision) {
+        cachedProfileRevision = createHash("sha256")
+            .update(readRequiredTextFile("persona.md"))
+            .update("\0")
+            .update(readRequiredTextFile("sadeq-source-of-truth.md"))
+            .digest("hex").slice(0, 16);
+    }
+    return cachedProfileRevision;
+}
+
 function getSystemInstruction() {
     if (cachedSystemInstruction) {
         return cachedSystemInstruction;
@@ -135,7 +149,7 @@ ${sourceOfTruth}
 --- FINAL PRIORITY RULES ---
 For claims about Sadeq, the verified Source of Truth overrides the visitor's claims and all other context.
 You are Sadeq's public-facing digital twin. Speak naturally in the first person as Sadeq.
-If directly asked whether you are the human Sadeq, disclose that you are his portfolio digital twin.
+Identify yourself as Sadeq's AI portfolio counterpart when introducing yourself or when asked about your identity. Never claim to be the human Sadeq.
 Lead with a direct answer and use evidence when it helps.
 Keep ordinary answers concise, usually between 60 and 120 words.
 Complete every thought and sentence before ending.
@@ -321,9 +335,17 @@ export const handler = async (event) => {
             );
         }
 
+        const headers = getCorsHeaders(origin);
+        try {
+            headers["X-Profile-Revision"] = getProfileRevision();
+        } catch {
+            // Preserve existing CORS behavior; absence of this header signals
+            // that the bundled knowledge documents could not be verified.
+        }
+        headers["X-Chat-Provider"] = "gemini";
         return {
             statusCode: 204,
-            headers: getCorsHeaders(origin),
+            headers,
             body: "",
         };
     }
@@ -351,12 +373,12 @@ export const handler = async (event) => {
         );
     }
 
-    if (!geminiApiKey || !ai) {
+    if (!ai) {
         return jsonResponse(
             500,
             {
                 error:
-                    "The server is missing the GEMINI_API_KEY environment variable.",
+                    "The assistant's Gemini service is not configured.",
             },
             origin
         );
@@ -423,28 +445,24 @@ export const handler = async (event) => {
     }
 
     try {
-        const interaction =
-            await ai.interactions.create({
-                model: geminiModel,
-                input: message,
-
-                previous_interaction_id:
-                    previousInteractionId ||
-                    undefined,
-
-                system_instruction:
-                    systemInstruction,
-
-                generation_config: {
-                    thinking_level: "low",
-                    temperature: 0.45,
-                    max_output_tokens: 400,
-                },
-            });
-
-        const answer = String(
-            interaction.output_text || ""
-        ).trim();
+        const interaction = await ai.interactions.create({
+            model: geminiModel,
+            input: message,
+            system_instruction: systemInstruction,
+            // Conversations created by the previous OpenAI provider cannot
+            // be resumed through Gemini. Start those conversations afresh.
+            previous_interaction_id: /^v1_[a-zA-Z0-9_-]+$/.test(previousInteractionId || "") ? previousInteractionId : undefined,
+            generation_config: {
+                thinking_level: "low",
+                temperature: 0.45,
+                max_output_tokens: 800,
+            },
+        });
+        const answer = String(interaction.output_text || (interaction.steps || [])
+            .filter(step => step.type === "model_output")
+            .flatMap(step => step.content || [])
+            .filter(part => part.type === "text")
+            .map(part => part.text).join("\n") || "").trim();
 
         const looksTruncated =
             answer &&
@@ -452,8 +470,7 @@ export const handler = async (event) => {
 
         if (looksTruncated) {
             console.warn(
-                "Gemini response may be incomplete:",
-                answer.slice(-100)
+                "Gemini response may be incomplete."
             );
         }
 
@@ -467,8 +484,10 @@ export const handler = async (event) => {
         let voiceProvider = "browser";
 
         if (
+            body.voice !== false &&
             elevenLabsApiKey &&
-            elevenLabsVoiceId
+            elevenLabsVoiceId &&
+            elevenLabsModel
         ) {
             try {
                 audioBase64 =
@@ -514,7 +533,7 @@ export const handler = async (event) => {
     } catch (error) {
         console.error(
             "Gemini API error:",
-            error
+            error?.name || "Error", getErrorStatus(error)
         );
 
         const status =
@@ -525,7 +544,7 @@ export const handler = async (event) => {
                 429,
                 {
                     error:
-                        "The current Gemini quota is exhausted. Please try again later.",
+                        "The Gemini service is temporarily at its usage limit. Please try again later.",
                 },
                 origin
             );
@@ -540,7 +559,7 @@ export const handler = async (event) => {
                 502,
                 {
                     error:
-                        "Gemini rejected the request. Check the API key and selected model.",
+                        "The Gemini service rejected this request. Please try again or contact Sadeq.",
                 },
                 origin
             );

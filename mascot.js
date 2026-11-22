@@ -1040,6 +1040,7 @@ async function askGemini(message) {
             body: JSON.stringify({
                 message: cleanMessage,
                 previousInteractionId: state.previousInteractionId,
+                voice: state.voiceEnabled,
             }),
         });
         const data = await response.json().catch(() => ({}));

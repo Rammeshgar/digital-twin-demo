@@ -83,7 +83,7 @@ The runtime does not jump directly between unrelated poses. Exported transition 
 - GLTF/GLB skeletal animation and morph targets
 - Web Speech API
 - MediaRecorder API
-- Server-side AI and optional speech services, with Netlify as the shared API entry point
+- Google Gemini for chat and recorded-audio transcription, with optional ElevenLabs speech and browser speech fallback
 - Netlify Functions
 - Vanilla JavaScript, HTML and CSS
 
@@ -116,7 +116,7 @@ The public assistant uses the same deployed portfolio API for chat and transcrip
 
 The serverless functions require provider credentials. Keep them in the deployment platform and never commit them.
 
-Refer to the function source for the currently supported environment-variable names.
+The shared backend uses `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and an optional `GEMINI_CHAT_MODEL` override; otherwise it uses `GEMINI_MODEL` or the configured default. ElevenLabs remains optional. Refer to the function source for the other environment-variable names.
 
 ## Performance decisions
 
