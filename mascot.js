@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { createMovement } from './movement.mjs';
-import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs?v=lip-sync-restored';
-import { createStudioSet } from './studio-scene.mjs';
+import { createMovement } from './movement.mjs?v=studio-v3';
+import { refineCharacter, updateNaturalBlink } from './character-refinement.mjs?v=studio-v3';
+import { createStudioSet } from './studio-scene.mjs?v=studio-v3';
 
 const embeddedAssistant = document.documentElement.dataset.twinEmbed === 'assistant';
 const parentOrigin = embeddedAssistant ? location.origin : null;
@@ -123,11 +123,17 @@ const TALK_PLAYBACK_SPEED = 0.68;
 function applyPapercutFinish(mesh) {
     if (/glass|lence|mouth_cavity/i.test(mesh.name)) return;
     const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    const isSkin = /new_head/i.test(mesh.name);
-    const isBody = /^body$/i.test(mesh.name);
+    for (const material of materials) {
+    if (!material?.isMeshStandardMaterial) continue;
+    const isHand = material.userData?.handSurface === true;
+    const isSkin = /new_head/i.test(mesh.name) || isHand;
+    const isBody = /^body$/i.test(mesh.name) && !isHand;
     const isHair = /^hair/i.test(mesh.name);
     const paperStrength = isSkin ? 0.19 : isBody ? 0.23 : 0.17;
-    const paletteTreatment = isSkin
+    const paletteTreatment = isHand
+        ? `vec3 handTone = mix(diffuseColor.rgb, vec3(paperLuma), 0.12);
+           diffuseColor.rgb = handTone * vec3(1.13, 1.22, 1.30) + vec3(0.020, 0.019, 0.017);`
+        : isSkin
         ? `diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.07, 0.97, 0.89), 0.48);
            diffuseColor.rgb += vec3(0.010, 0.005, 0.0);`
         : isBody
@@ -139,13 +145,11 @@ function applyPapercutFinish(mesh) {
                 ? `diffuseColor.rgb *= vec3(0.84, 0.90, 1.0);`
                 : "";
 
-    for (const material of materials) {
-        if (!material?.isMeshStandardMaterial) continue;
         const matteRoughness = isHair ? 0.98 : isSkin ? 0.90 : isBody ? 0.92 : 0.88;
         material.roughness = Math.max(material.roughness ?? 0, matteRoughness);
         material.metalness = Math.min(material.metalness ?? 0, 0.02);
         material.envMapIntensity = Math.min(material.envMapIntensity ?? 1, isHair ? 0.18 : isSkin ? 0.30 : 0.42);
-        material.flatShading = true;
+        material.flatShading = !isHand;
         material.onBeforeCompile = (shader) => {
             shader.vertexShader = shader.vertexShader
                 .replace("#include <common>", "#include <common>\nvarying vec3 vPaperPosition;")
@@ -180,7 +184,7 @@ function applyPapercutFinish(mesh) {
                     ${paletteTreatment}`);
         };
         // Skin, cloth and hair each compile a different palette treatment.
-        material.customProgramCacheKey = () => `papercut-v3-${isSkin ? 'skin' : isBody ? 'cloth' : isHair ? 'hair' : 'general'}-${paperStrength}`;
+        material.customProgramCacheKey = () => `papercut-v4-${isHand ? 'hands' : isSkin ? 'skin' : isBody ? 'cloth' : isHair ? 'hair' : 'general'}-${paperStrength}`;
         material.needsUpdate = true;
     }
 }
@@ -343,6 +347,13 @@ ui.resetView?.addEventListener('click', () => {
     manualView = false;
     moveCameraForMode();
 });
+document.getElementById('ai-mascot-wide-view')?.addEventListener('click',event=>{
+    state.wideStudio=!state.wideStudio;
+    event.currentTarget.setAttribute('aria-pressed',String(state.wideStudio));
+    event.currentTarget.title=state.wideStudio?'Return to portrait framing':'Wide studio view';
+    document.getElementById('studio-framing-label').textContent=state.wideStudio?'STUDIO / FULL VIEW':'STUDIO / PORTRAIT';
+    manualView=false;moveCameraForMode();
+});
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && ui.panel.classList.contains("is-open")) {
         event.preventDefault();
@@ -448,6 +459,7 @@ async function loadMascot() {
         if (state.disposed) return;
         model = gltf.scene;
         refineCharacter(model);
+        if(model.userData.handSurface) ui.stage.dataset.handSurface=String(model.userData.handSurface.handTriangles);
         scene.add(model);
 
         model.traverse((child) => {
@@ -574,8 +586,15 @@ function frameMascot() {
 // State changes are a subtle adjustment, not a new camera angle or animation.
 function getCameraDestination(mode = getStudioMode()) {
     if (!characterFrame || !camera) return null;
+    if(state.reviewGesture)mode='speaking';
     const { bounds, size, center } = characterFrame;
     const aspect = Math.max(camera.aspect, 0.35);
+    if(state.wideStudio){
+        const target=new THREE.Vector3(center.x,bounds.min.y+size.y*.51,center.z);
+        const height=Math.max(size.y*1.18,1.62/aspect);
+        const distance=Math.min(size.y*1.97,height/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))));
+        return {target,position:new THREE.Vector3(target.x+.10,target.y+.09,target.z+distance)};
+    }
     // On a phone the portrait takes a deliberately nearer shot; a full waist
     // composition in a 240px stage makes facial motion unnecessarily tiny.
     const smallStage = matchMedia('(max-width: 760px)').matches && ui.stage.clientHeight < 390;
@@ -584,7 +603,10 @@ function getCameraDestination(mode = getStudioMode()) {
     const targetRatio = smallStage ? (state.expanded ? 0.803 : 0.832) : (state.expanded ? 0.776 : 0.815);
     const verticalRatio = smallStage ? (state.expanded ? 0.545 : 0.495) : (state.expanded ? 0.635 : 0.545);
     const target = new THREE.Vector3(center.x, bounds.min.y + size.y * (targetRatio + faceBias), center.z);
-    const visibleHeight = Math.max(size.y * verticalRatio, (state.expanded ? 0.96 : 0.80) / aspect);
+    // The active hand's full reach matters when explaining. Narrow desktop
+    // stages widen for speech rather than trimming the gesture at the edges.
+    const horizontalFit=mode==='speaking'?1.46:state.expanded?0.96:0.80;
+    const visibleHeight = Math.max(size.y * verticalRatio, horizontalFit / aspect);
     // Listening closes the distance only slightly; speaking breathes room into
     // the frame for authored body motion. Never move the camera radically.
     const modeScale = mode === 'listening' ? 0.98 : mode === 'speaking' ? 1.045 : 1;
@@ -596,7 +618,7 @@ function getCameraDestination(mode = getStudioMode()) {
 function moveCameraForMode(explicit = true) {
     const destination = getCameraDestination();
     if (!destination || !camera || !controls) return;
-    ui.stage.dataset.cameraMode = state.expanded ? 'studio' : 'portrait';
+    ui.stage.dataset.cameraMode = state.wideStudio?'wide':state.expanded ? 'studio' : 'portrait';
     if (reducedMotion.matches) {
         cameraTransition = null;
         camera.position.copy(destination.position);
@@ -673,7 +695,7 @@ function animate() {
     movementElapsed += delta;
     // Reduced-motion visitors retain speech-driven performance, but idle and
     // thinking stay as still poses rather than looping gestural animation.
-    if (!reducedMotion.matches || state.speaking) {
+    if (!reducedMotion.matches || state.speaking || state.reviewGesture) {
         if (movement) movement.update(delta, state, movementElapsed);
         else mixer?.update(delta);
         reducedPose = null;
@@ -1460,6 +1482,18 @@ ui.mic.addEventListener("click", async () => {
 
 setupSpeechRecognition();
 window.speechSynthesis?.getVoices();
+
+// Local-only inspection controls; no live service or synthetic audio is used.
+if(new URLSearchParams(location.search).get('review')==='hands' &&
+    (['127.0.0.1','localhost'].includes(location.hostname)||location.hostname.endsWith('.invalid'))){
+    const controls=document.createElement('div');
+    controls.className='hand-review-panel';
+    controls.innerHTML='<p><strong>V3 / Hand & studio review</strong><br>Preview motion without an AI request.</p><label for="review-hand-clip">Hand pose</label><select id="review-hand-clip"><option value="idle">Natural idle</option><option value="cycle">Cycle all gestures</option><option value="Open_Both">Open both hands</option><option value="Explain_Right">Explain with right hand</option><option value="Present_Left">Present with left hand</option><option value="Small_Point">Point gently</option><option value="Frame_An_Idea">Frame an idea</option><option value="Offer_Forward">Offer forward</option><option value="Emphasis_Right">Right emphasis</option></select><label class="hand-review-freeze"><input type="checkbox" id="review-freeze"> Hold gesture at accent</label>';
+    document.querySelector('.ai-prompt-list')?.append(controls);
+    const select=controls.querySelector('select'),freeze=controls.querySelector('input');
+    const sync=()=>{state.reviewGesture=select.value!=='idle';state.reviewClip=!state.reviewGesture||select.value==='cycle'?null:select.value;state.reviewFreeze=state.reviewGesture&&freeze.checked;ui.stage.dataset.reviewPose=select.value;if(!manualView&&state.loaded)moveCameraForMode(false);};
+    select.addEventListener('change',sync);freeze.addEventListener('change',sync);sync();
+}
 
 if (embeddedAssistant) {
     // The iframe itself is created only after the user's launch action. Give

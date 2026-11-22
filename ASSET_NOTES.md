@@ -19,7 +19,7 @@ The character was developed as a personalized digital representation using Blend
 
 The web GLB includes substantial transformation and integration work: material direction, studio environment, camera presentation, lighting, facial targets, animation trimming, pose differentiation, transition baking and web export.
 
-The second-generation runtime uses the same approved character asset and a code-built architectural studio. Its likeness, rig, authored movement and facial targets are not replaced by the studio redesign.
+The third-generation runtime uses the same approved character asset, with a code-built enclosed architectural studio. It refines the skinned hand mesh at runtime and drives the existing 30 finger joints with separate gesture poses; the original GLB, likeness, skeleton and facial targets are preserved.
 
 ## License boundary
 

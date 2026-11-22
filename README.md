@@ -2,7 +2,7 @@
 
 A browser-based digital twin that combines authored character animation, continuous gesture blending, speech-driven lip movement, controlled AI context, microphone input, and resilient web fallbacks.
 
-![Digital twin studio preview](assets/studio-v2-preview.webp)
+![Digital twin studio preview showing open-hand gestures](assets/studio-v3-preview.webp)
 
 The visual system uses a paper-cut-inspired character treatment rather than a generic glossy avatar: layered fiber texture, an architectural studio, dimensional shadows, and controlled aqua-and-amber lighting connect it to the wider portfolio identity.
 
@@ -16,7 +16,9 @@ The goal is not to simulate a human. It is to make a technical portfolio easier 
 
 ## Studio experience
 
-The second-generation interface puts the conversation and character in one workspace. The character and approved paper-cut identity are unchanged; the presentation uses a more deliberate architectural set, portrait framing and a restrained copper-and-aqua lighting palette.
+The third-generation studio pairs a more natural hand performance with a full, enclosed architectural set. The original character identity, facial targets and authored body animation remain intact. The camera offers portrait and wide views, with orbit and reset controls.
+
+![Wide view of the enclosed 3D studio](assets/studio-v3-wide.webp)
 
 The portfolio's [Digital Twin case study](https://rammeshgar.github.io/digital-twin/) is the single technical presentation, with its system map, animated explanation, design and limitations. This repository's [standalone assistant](https://rammeshgar.github.io/digital-twin-demo/) remains a direct, shareable app. Old case-study anchors forward to the matching portfolio sections, and the original explainer files remain accessible for existing links.
 
@@ -28,7 +30,9 @@ Interface sounds are separate from the AI voice and are off by default. The 3D e
 
 - Authored idle, greeting, start and explanation animations
 - Dedicated transition clips for continuous gesture blending
-- Three non-repeating speaking silhouettes
+- Non-repeating speaking gestures with independently animated finger joints
+- Thirty existing finger joints animated through a procedural hand layer, with seven hand poses and smooth transitions
+- Refined skinned hand geometry and an enclosed, batched architectural studio
 - Eight facial viseme targets
 - Audio-energy and transcript-timing lip movement
 - Text, browser speech recognition and recorded-audio transcription paths
@@ -75,7 +79,7 @@ Idle
   +-- speech ends ----> Idle
 ```
 
-The runtime does not jump directly between unrelated poses. Exported transition clips bridge every speaking-state combination, while Three.js cross-fades between active actions.
+The runtime does not jump directly between unrelated poses. Exported transition clips bridge speaking-state combinations, while Three.js cross-fades between active actions. A separate hand layer then blends relaxed, open, pointing and other finger poses over the existing arm and wrist motion. The hand mesh is selectively refined at runtime with interpolated skin weights rather than changing the source GLB.
 
 ## Technology
 
@@ -125,6 +129,7 @@ The shared backend uses `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and an optional `
 - Three.js 0.167.1 and the required loader, controls, decoder and geometry utilities are served locally, preserving the exact original library version while avoiding a third-party CDN dependency. Their MIT license is included in `vendor/three/LICENSE`.
 - Portfolio typefaces are served locally. The launch preview is a compressed capture of the live 3D studio rather than separate artwork.
 - Mobile rendering uses a lower pixel ratio and disables expensive shadows.
+- Repeated studio details are instanced and static architecture is batched by material. Hand refinement is localized to the skinned hands.
 - Renderer resizing is observed instead of continuously polling layout.
 - Mouth shapes are smoothed to avoid visual chatter.
 - The text interface remains usable while the model loads or if WebGL fails.

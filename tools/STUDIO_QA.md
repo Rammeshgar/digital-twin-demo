@@ -1,4 +1,12 @@
-# Studio v2 browser QA
+# Studio browser QA
+
+## Version 3 hands and room
+
+With Playwright installed, run `node tools/inspect-hand-rig.mjs` for a numerical rig and weight check, and `node tools/check-hands-studio.mjs` for the isolated browser review. Set `HANDS_MOBILE=1` for the phone layout, `HANDS_QUICK=1` for a shortened desktop gesture review, and optionally `STUDIO_SHOT_DIR`, `PLAYWRIGHT_MODULE` or `CHROME_PATH`.
+
+The checks exercise the actual refined skinned mesh, 30 articulated finger joints, selected gestures, wide camera, both supported orbit extremes and the phone composer bounds. They block real provider, tracking and microphone requests.
+
+## Version 2 baseline
 
 The test is isolated from the production services. It runs the actual HTML, CSS, local Three.js distribution, character GLB and authored movement data in Chrome; it intercepts network requests in the test browser. Chat requests receive a deterministic local fixture response or a deliberately simulated 503. No conversation is submitted to the live AI provider, analytics is inactive, and real microphone access and transcription calls are blocked.
 
