@@ -94,6 +94,7 @@ let cameraDragging = false;
 let lastStudioMode;
 let studioSet;
 let reducedPose;
+let lastStaticRenderKey = '';
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const initialLoaderMarkup = ui.loader.innerHTML;
 const lipSyncMeshes = [];
@@ -397,6 +398,7 @@ async function loadMascot() {
     manualView = false;
     cameraDragging = false;
     reducedPose = null;
+    lastStaticRenderKey = '';
     model = null;
     headBone = neckBone = null;
     headLookApplied = neckLookApplied = false;
@@ -763,6 +765,17 @@ function animate() {
         const targetIntensity = state.listening || state.recordingStream ? 0.95 : state.speaking ? 0.75 : 0.48;
         studioSet.signal.emissiveIntensity = reducedMotion.matches ? targetIntensity : THREE.MathUtils.lerp(studioSet.signal.emissiveIntensity, targetIntensity, 1 - Math.exp(-3 * delta));
     }
+    // A reduced-motion idle/listening/thinking scene is a still image. Keep
+    // camera and size changes responsive without continuously drawing an
+    // unchanged room (particularly costly on software-rendered WebGL).
+    if (reducedMotion.matches && !state.speaking && !state.reviewGesture) {
+        const canvas = renderer.domElement;
+        const key = [getStudioMode(), canvas.width, canvas.height, camera.zoom,
+            ...camera.position.toArray(), ...camera.quaternion.toArray()]
+            .map(value => typeof value === 'number' ? value.toFixed(5) : value).join('|');
+        if (key === lastStaticRenderKey) return;
+        lastStaticRenderKey = key;
+    } else lastStaticRenderKey = '';
     renderer.render(scene, camera);
 }
 
@@ -859,7 +872,9 @@ function updateVisemes() {
         for (const [name, index] of Object.entries(mesh.morphTargetDictionary)) {
             if (!VISEME_NAMES.includes(name)) continue;
             const target = name === activeName ? strength : 0;
-            mesh.morphTargetInfluences[index] = THREE.MathUtils.lerp(mesh.morphTargetInfluences[index] || 0, target, state.speaking ? 0.32 : 0.2);
+            mesh.morphTargetInfluences[index] = reducedMotion.matches && !state.speaking
+                ? 0
+                : THREE.MathUtils.lerp(mesh.morphTargetInfluences[index] || 0, target, state.speaking ? 0.32 : 0.2);
         }
     }
 }
